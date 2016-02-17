@@ -1,0 +1,11 @@
+{
+  "name": "h5tracker",
+  "version": "0.0.0",
+  "scripts": {
+    "dist": "gulp"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.0",
+    "gulp-jdists": "^0.0.5"
+  }
+}

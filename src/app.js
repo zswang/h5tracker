@@ -4,11 +4,21 @@ var newGuid = common.newGuid;
 /*</jdists>*/
 
 /*=== 初始化 ===*/
+/*<function name="createApp">*/
+var trackers = {};
 
+/**
+ * 创建应用追踪器
+ *
+ * @param {string} appName 应用名
+ * @param {Object} argv 配置项
+ * @return {Object} 返回应用追踪器实例
+ */
 function createApp(appName, argv) {
   argv = argv || {};
 
   var instance = createTracker('main');
+
   /*=== 生命周期 ===*/
 
   /**
@@ -46,31 +56,11 @@ function createApp(appName, argv) {
 
   }
 
-  /*==== 事件 ===*/
-
-  /**
-   * 绑定事件
-   *
-   * @param {string} event
-   * @param {Function} callback
-   */
-  function on(event, callback) {
-
-  }
-
-  /**
-   * 绑定事件
-   *
-   * @param {string} event
-   * @param {Object...} data
-   */
-  function emit(event, data) {
-
-  }
   return instance;
 }
-
+/*</function>*/
 exports.createApp = createApp;
+
 
 /*<remove>*/
 console.log(newGuid());
@@ -125,3 +115,7 @@ console.log(newGuid());
 // h5t('pv.on', 'destroySession', function () {
 
 // });
+//
+//
+
+

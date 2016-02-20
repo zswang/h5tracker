@@ -1,9 +1,4 @@
-/*<function name="variant">*/
-var trackers = {};
-/*</function>*/
-
-
-/*<function name="createTracker" depend="variant">*/
+/*<function name="createTracker">*/
 /**
  * 创建追踪器
  *
@@ -12,13 +7,16 @@ var trackers = {};
  * @return {Object} 返回追踪器实例
  */
 function createTracker(name, acceptUrl) {
+  /*<jdists encoding="fndep" import="./event.js" depend="createEmitter">*/
+  var createEmitter = require('./event').createEmitter;
+  /*</jdists>*/
+
 	/**
 	 * 追踪器实例
 	 *
 	 * @type {Object}
 	 */
-	var instance = {};
-
+	var instance = createEmitter();
   trakers[name] = instance;
 
 	/**

@@ -3,6 +3,13 @@ var common = require('./common');
 var newGuid = common.newGuid;
 /*</jdists>*/
 
+/*<jdists encoding="fndep" import="./event.js" depend="createEmitter">*/
+var event = require('./event');
+var createEmitter = event.createEmitter;
+/*</jdists>*/
+
+exports.createEmitter = createEmitter;
+
 /*=== 初始化 ===*/
 /*<function name="createApp">*/
 var trackers = {};
@@ -62,9 +69,9 @@ function createApp(appName, argv) {
 exports.createApp = createApp;
 
 
-/*<remove>*/
+/*<remove>
 console.log(newGuid());
-/*</remove>*/
+</remove>*/
 
 // App.init(argv)
 

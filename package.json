@@ -1,11 +1,20 @@
 {
   "name": "h5tracker",
   "version": "0.0.0",
+  "main": "src/app.js",
   "scripts": {
-    "dist": "gulp"
+    "dist": "gulp",
+    "example": "gulp example",
+    "test": "istanbul cover --hook-run-in-context node_modules/mocha/bin/_mocha -- -R spec"
   },
   "devDependencies": {
     "gulp": "^3.9.0",
-    "gulp-jdists": "^0.0.5"
+    "gulp-jdists": "^0.0.5",
+    "gulp-jshint": "^2.0.0",
+    "gulp-uglify": "^1.5.3",
+    "gulp-rename": "^1.2.2",
+    "mocha": "^2.0.1",
+    "istanbul": "^0.3.17",
+    "should": "^4.1.0"
   }
 }

@@ -17,7 +17,6 @@ function createTracker(name, acceptUrl) {
 	 * @type {Object}
 	 */
 	var instance = createEmitter();
-  trakers[name] = instance;
 
 	/**
 	 * 日志接收地址
@@ -74,12 +73,25 @@ function createTracker(name, acceptUrl) {
   function send(data) {
 
   }
+  /**
+   * 打印日志
+   *
+   * @param  {[type]} params [description]
+   * @return {[type]}        [description]
+   */
+  function log(params) {
 
-  function getTracker(name) {
-    return trakers[name];
   }
 
-  instance.getTracker = getTracker;
+  ['debug', 'info', 'warn', 'error', 'fatal'].forEach(function (level) {
+    instance[level] = function (message) {
+      log({
+        level: level,
+        message: message
+      });
+    };
+  });
+
 	return instance;
 }
 /*</function>*/

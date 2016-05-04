@@ -56,8 +56,8 @@ h5tracker 移动端页面统计框架
 
 ```js
 h5t('config', {
-  sessionExpires: 30000, // session 过期时间
-  storageExpires: 10 * 24 * 60 * 60, // 存储过期时间
+  sessionExpires: 30, // session 过期时间，单位：秒
+  storageExpires: 10 * 24 * 60 * 60, // 存储过期时间，单位：秒
 });
 ```
 
@@ -77,7 +77,7 @@ h5t('main.create', {
     lo: document.location.pathname
   },
   onSend: function (data) { // 发送数据时触发
-    data.token = token(data);
+    data.token = this.token(data);
   },
   onCreateSession: function () { // Session 创建
     this.send({
@@ -120,14 +120,13 @@ tracker|追踪器名称，默认 false
 
 ### List of data to be sent（待发送列表）
 
-+ localStorage.h5t_dataList
++ localStorage.h5t_data_:tracker
 
 ```js
 [{
 	createTime: 1455603047968, // 记录产生时间
 	expireTime: 1455603147968, // 记录过期时间
-	tracker: 'main', // tracker 名称
-	accept: 'http://log.ifreetalk.com/u.gif', // 统计模块
+	accept: 'http://log.ifreetalk.com/u.gif', // 日志接收地址
 	data: 'ht=event&action=tap&page=home&xp=A(main)BC2A' // 数据
 }]
 ```

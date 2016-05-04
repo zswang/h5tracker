@@ -4,6 +4,7 @@
   "main": "src/app.js",
   "scripts": {
     "dist": "gulp",
+    "debug": "gulp debug",
     "example": "gulp example",
     "test": "istanbul cover --hook-run-in-context node_modules/mocha/bin/_mocha -- -R spec"
   },
@@ -13,6 +14,9 @@
     "gulp-jshint": "^2.0.0",
     "gulp-uglify": "^1.5.3",
     "gulp-rename": "^1.2.2",
+    "gulp-livereload": "^3.8.1",
+    "gulp-watch": "^0.5.3",
+
     "mocha": "^2.0.1",
     "istanbul": "^0.3.17",
     "should": "^4.1.0"

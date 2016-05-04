@@ -4,20 +4,30 @@ var newGuid = common.newGuid;
 /*</jdists>*/
 
 /*<jdists encoding="fndep" import="./event.js" depend="createEmitter">*/
-var event = require('./event');
-var createEmitter = event.createEmitter;
+var createEmitter = require('./event').createEmitter;
 /*</jdists>*/
 
 exports.createEmitter = createEmitter;
 
 /*<jdists encoding="fndep" import="./tracker.js" depend="createTracker">*/
-var event = require('./tracker');
-var createTracker = tracker.createTracker;
+var createTracker = require('./tracker').createTracker;
 /*</jdists>*/
 
 /*=== 初始化 ===*/
 /*<function name="createApp" depend="createEmitter,createTracker,newGuid">*/
+/**
+ * 追踪器实例
+ *
+ * @type {Object}
+ */
 var trackers = {};
+
+/**
+ * 追踪器参数缓存，当追踪器未创建时保存
+ *
+ * @type {Object}
+ */
+var argvList = {};
 
 /**
  * 创建应用追踪器
@@ -69,6 +79,12 @@ function createApp(appName, argv) {
   }
   instance.config = config;
 
+  /**
+   * 执行命令
+   *
+   * @param {string} line "[trackerName.]methodName"
+   * @return {[type]}      [description]
+   */
   function cmd(line) {
     if (typeof line !== 'string') {
       console.error('Parameter "line" is not a string type.');
@@ -81,29 +97,28 @@ function createApp(appName, argv) {
       return;
     }
     var trackerName = match[1];
-    var method = match[2];
+    var methodName = match[2];
 
-    console.log('trackerName: %s, method: %s', trackerName, method);
-    //             args[0] = method; // 'hunter.send' -> 'send'
-    //             command.apply(entry.tracker(trackerName), args);
+    var methodArgs = [].slice.call(arguments, 1);
 
-    // var args = [].slice.call(arguments, 1);
-
-
-
-    //     if (this.created || /^(on|un|set|get|create)$/.test(method)) {
-    //         var methodFunc = Tracker.prototype[method];
-    //         var params = [];
-    //         for (var i = 1, len = args.length; i < len; i++) {
-    //             params.push(args[i]);
-    //         }
-    //         if (typeof methodFunc === 'function') {
-    //             methodFunc.apply(this, params);
-    //         }
-    //     }
-    //     else { // send|fire // 实例创建以后才能调用的方法
-    //         this.argsList.push(args);
-    //     }
+    // console.log('trackerName: %s, methodName: %s', trackerName, methodName);
+    if (!trackerName) {
+      if (typeof app[methodName] === 'function') {
+        return app[methodName].apply(app, methodArgs);
+      } else {
+        console.error('App method "%s" is invalid.', methodName);
+      }
+    } else {
+      var tracker = trackers[trackerName];
+      if (!tracker) {
+        tracker = trackers[trackerName] = createTracker(trackerName);
+      }
+      if (typeof tracker[methodName] === 'function') {
+        return tracker[methodName].apply(tracker, methodArgs);
+      } else {
+        console.error('Tracker method "%s" is invalid.', methodName);
+      }
+    }
   }
   instance.cmd = cmd;
 

@@ -6,58 +6,60 @@
 var gulp = require('gulp');
 var jdists = require('gulp-jdists');
 var rename = require('gulp-rename');
-var livereload = require('gulp-livereload');
 var watch = require('gulp-watch');
+var connect = require('gulp-connect');
+var uglify = require('gulp-uglify');
 
-gulp.task('example', () => {
+gulp.task('example', function () {
   return gulp.src('example.jdists.js')
     .pipe(jdists())
     .pipe(rename('example.js'))
     .pipe(gulp.dest('test'));
 });
 
-gulp.task('default', () => {
-  return gulp.src(['src/entry.js'])
-    .pipe(jdists())
+gulp.task('build', function () {
+  return gulp.src(['src/index.js'])
+    .pipe(jdists({trigger: 'release'}))
+    .pipe(rename('h5tracker.js'))
+    .pipe(gulp.dest('./'))
     .pipe(uglify())
-    .pipe(gulp.dest('lib'));
+    .pipe(rename('h5tracker.min.js'))
+    .pipe(gulp.dest('./'));
 });
 
-gulp.task('live', () => {
-  return gulp.src(['src/entry.js'])
-    .pipe(jdists())
-    .pipe(gulp.dest('lib'))
-    .pipe(livereload());;
+gulp.task('buildInline', function () {
+  return gulp.src(['src/inline.js'])
+    .pipe(jdists({trigger: 'release'}))
+    .pipe(gulp.dest('./lib'))
+    .pipe(uglify())
+    .pipe(rename('inline.min.js'))
+    .pipe(gulp.dest('./lib'));
 });
 
-const http = require('http');
-const fs = require('fs');
-const path = require('path');
-gulp.task('debug', () => {
-
-  const server = http.createServer((req, res) => {
-    res.writeHead(200, { 'Content-Type': 'text/html'});
-    console.log(req.url);
-    switch (req.url) {
-      case '/':
-        res.write(fs.readFileSync('example/base.html'));
-        break;
-      case '/lib/entry.js':
-        res.write(fs.readFileSync(path.join('.', req.url)));
-        break;
-    }
-    res.end();
-  });
-
-  server.on('clientError', (err, socket) => {
-    socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
-  });
-  server.listen(8111);
-  livereload.listen();
-
-  watch(['src/entry.js', 'example/base.html'], function() {
-    gulp.start("live");
-  });
-  // gulp-open
-
+gulp.task('buildDev', function () {
+  return gulp.src(['src/index.js'])
+    .pipe(jdists({trigger: 'debug'}))
+    .pipe(rename('h5tracker.js'))
+    .pipe(gulp.dest('./'));
 });
+
+gulp.task('connect', function() {
+  connect.server({
+    root: './',
+    port: 8111,
+    livereload: true
+  });
+});
+
+gulp.task('html', function () {
+  gulp.src('./example/*.html')
+    .pipe(connect.reload());
+});
+
+gulp.task('watch', function () {
+  gulp.watch(['src/*.js', 'example/*.html'], ['buildDev', 'buildInline', 'html']);
+});
+
+gulp.task('debug', ['buildDev', 'buildInline', 'html', 'connect', 'watch']);
+
+gulp.task('default', ['build', 'buildInline']);

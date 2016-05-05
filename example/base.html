@@ -1,32 +1,37 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <title>h5tracker example</title>
-  <script>
-(function(window, document, name, cdn) {
-
-  if (!document.querySelector) { // 非 HTML5 环境
-    return;
-  }
-  window.h5tObjectName = name;
-  var lastScript = document.querySelector('script');
-  var script = document.createElement('script');
-  script.async = true;
-  script.src = cdn;
-  lastScript.parentNode.insertBefore(script, lastScript);
-  window[name] = window[name] || function () {
-    (window[name].q = window[name].q || []).push(arguments);
-  };
-  window[name].l = window[name].l || Date.now();
-
-})(window, document, 'h5t', '../lib/entry.js');
-  </script>
-  <script>
-h5t('speed.set', 'tt', 123);
-  </script>
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+  <meta name="format-detection" content="telephone=no"/>
+  <script src="../lib/inline.min.js"></script>
+  <script>h5t('load', '../h5tracker.js');</script>
+  <script>h5t('speed.set', 'tt', 123);</script>
 </head>
 <body>
-
+  <button cmd="log">hello 11111111</button>
 </body>
+<script>
+function doAction(cmd, element) {
+  switch (cmd) {
+    case 'log':
+      h5t('speed.log', element.innerHTML);
+      break;
+  }
+}
+
+document.addEventListener('touchend', function (e) {
+  var target = e.target;
+  while (target) {
+    var cmd = target.getAttribute && target.getAttribute('cmd');
+    if (cmd) {
+      doAction(cmd, target);
+      return;
+    }
+    target = target.parentNode;
+  }
+});
+</script>
 </html>

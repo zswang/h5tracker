@@ -38,6 +38,7 @@ var argvList = {};
  */
 function createApp(appName, argv) {
   argv = argv || {};
+  console.log('createApp() appName: %s', appName);
 
   var instance = createTracker('main');
 

@@ -374,8 +374,10 @@ function createTracker(name, acceptUrl) {
    */
   function log(params) {
     if (typeof params === 'string') {
-      params.message = params;
-      params.level = 'debug';
+      params = {
+        message: params,
+        level: 'debug'
+      };
     }
     console[params.level].call(console, params.message);
   }

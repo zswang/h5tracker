@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
   <meta name="format-detection" content="telephone=no"/>
   <script src="../lib/inline.min.js"></script>
-  <script>h5t('load', '../h5tracker.js');</script>
+  <script>h5t('cdn', '../h5tracker.js');</script>
   <script>h5t('speed.set', 'tt', 123);</script>
 </head>
 <body>
@@ -17,7 +17,10 @@
 function doAction(cmd, element) {
   switch (cmd) {
     case 'log':
-      h5t('speed.log', element.innerHTML);
+      h5t('speed.log', {
+        level: 'error',
+        message: element.innerHTML
+      });
       break;
   }
 }

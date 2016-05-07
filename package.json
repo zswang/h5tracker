@@ -1,12 +1,13 @@
 {
   "name": "h5tracker",
   "version": "0.0.0",
-  "main": "lib/index.js",
+  "main": "h5tracker.js",
   "scripts": {
     "dist": "gulp",
     "debug": "gulp debug",
     "example": "gulp example",
-    "test": "istanbul cover --hook-run-in-context node_modules/mocha/bin/_mocha -- -R spec"
+    "test": "istanbul cover --hook-run-in-context node_modules/mocha/bin/_mocha -- -R spec",
+    "mocha": "mocha"
   },
   "devDependencies": {
     "gulp": "^3.9.0",

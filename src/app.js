@@ -23,24 +23,19 @@ var createTracker = require('./tracker').createTracker;
 var trackers = {};
 
 /**
- * 追踪器参数缓存，当追踪器未创建时保存
- *
- * @type {Object}
- */
-var argvList = {};
-
-/**
  * 创建应用追踪器
  *
  * @param {string} appName 应用名
  * @param {Object} argv 配置项
  * @return {Object} 返回应用追踪器实例
  */
-function createApp(appName, argv) {
-  argv = argv || {};
+function createApp(appName) {
   console.log('createApp() appName: %s', appName);
 
   var instance = createTracker('main');
+  instance.createEmitter = createEmitter;
+
+  trackers[instance.name] = instance;
 
   /*=== 生命周期 ===*/
 

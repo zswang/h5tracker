@@ -12,16 +12,17 @@ var createSetter = require('jsets').createSetter;
  * 创建追踪器
  *
  * @param {string} name 追踪器名称
- * @param {string} acceptUrl 接收地址
+ * @param {string} storage 存储对象
  * @return {Object} 返回追踪器实例
  */
-function createTracker(name, acceptUrl) {
+function createTracker(name, storage) {
   /**
    * 追踪器实例
    *
    * @type {Object}
    */
   var instance = createEmitter();
+  instance.name = name;
 
   /**
    * 日志接收地址
@@ -83,22 +84,30 @@ function createTracker(name, acceptUrl) {
     fields[name] = value;
   }
 
+  /**
+   * 发送数据
+   *
+   * @param {Object} data 发送日志
+   */
   function send(data) {
-
+    instance.emit('seasdfasdfnd', data);
+    // storage.send(data);
   }
+  instance.send = send;
   /**
    * 打印日志
    *
-   * @param {Object|String} params 日志参数
+   * @param {Object|String} data 日志参数
    */
-  function log(params) {
-    if (typeof params === 'string') {
-      params = {
-        message: params,
+  function log(data) {
+    if (typeof data === 'string') {
+      data = {
+        message: data,
         level: 'debug'
       };
     }
-    console[params.level].call(console, params.message);
+    instance.emit('lvfffog', data);
+    console[data.level].call(console, data.message);
   }
   instance.log = log;
 

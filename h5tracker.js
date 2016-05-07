@@ -4,7 +4,6 @@
   if (oldObject && oldObject.defined) { // 避免重复加载
     return;
   }
-  oldObject.defined = true;
   /*<function name="camelCase">*/
   /**
    * 将目标字符串进行驼峰化处理
@@ -62,6 +61,11 @@
       console.log('bee', data);
     }
     emitter.on('click', bee);
+    emitter.on('click2', function (data) {
+      console.log('on', data);
+    });
+    emitter.emit('click2', 'hello 1');
+    // > on hello 2
     emitter.emit('click', 'hello 1');
     // > on hello 1
     // > once hello 1
@@ -144,7 +148,9 @@
      */
     function emit(event) {
       var argv = [].slice.call(arguments, 1);
-      callbacks.forEach(function (item) {
+      callbacks.filter(function (item) {
+        return item.event === event;
+      }).forEach(function (item) {
         item.fn.apply(instance, argv);
       });
       return instance;
@@ -302,16 +308,17 @@
  * 创建追踪器
  *
  * @param {string} name 追踪器名称
- * @param {string} acceptUrl 接收地址
+ * @param {string} storage 存储对象
  * @return {Object} 返回追踪器实例
  */
-function createTracker(name, acceptUrl) {
+function createTracker(name, storage) {
   /**
    * 追踪器实例
    *
    * @type {Object}
    */
   var instance = createEmitter();
+  instance.name = name;
   /**
    * 日志接收地址
    *
@@ -365,21 +372,30 @@ function createTracker(name, acceptUrl) {
     }
     fields[name] = value;
   }
+  /**
+   * 发送数据
+   *
+   * @param {Object} data 发送日志
+   */
   function send(data) {
+    instance.emit('seasdfasdfnd', data);
+    // storage.send(data);
   }
+  instance.send = send;
   /**
    * 打印日志
    *
-   * @param {Object|String} params 日志参数
+   * @param {Object|String} data 日志参数
    */
-  function log(params) {
-    if (typeof params === 'string') {
-      params = {
-        message: params,
+  function log(data) {
+    if (typeof data === 'string') {
+      data = {
+        message: data,
         level: 'debug'
       };
     }
-    console[params.level].call(console, params.message);
+    instance.emit('lvfffog', data);
+    console[data.level].call(console, data.message);
   }
   instance.log = log;
   ['debug', 'info', 'warn', 'error', 'fatal'].forEach(function(level) {
@@ -411,22 +427,17 @@ function newGuid() {
  */
 var trackers = {};
 /**
- * 追踪器参数缓存，当追踪器未创建时保存
- *
- * @type {Object}
- */
-var argvList = {};
-/**
  * 创建应用追踪器
  *
  * @param {string} appName 应用名
  * @param {Object} argv 配置项
  * @return {Object} 返回应用追踪器实例
  */
-function createApp(appName, argv) {
-  argv = argv || {};
+function createApp(appName) {
   console.log('createApp() appName: %s', appName);
   var instance = createTracker('main');
+  instance.createEmitter = createEmitter;
+  trackers[instance.name] = instance;
   /*=== 生命周期 ===*/
   /**
    * session 创建的时间
@@ -499,10 +510,12 @@ function createApp(appName, argv) {
   return instance;
 }
 /*</function>*/
-  var app = createApp();
+  var app = createApp(objectName);
   var instance = function() {
     app.cmd.apply(app, arguments);
   };
+  instance.app = app;
+  instance.defined = true
   if (oldObject) {
     // 处理临时 h5t 对象
     var items = [].concat(oldObject.p || [], oldObject.q || []);

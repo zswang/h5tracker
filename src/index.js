@@ -6,17 +6,18 @@
     return;
   }
 
-  oldObject.defined = true;
-
   /*<jdists encoding="fndep" import="./app.js" depend="createApp">*/
   var createApp = require('./app').createApp;
   /*</jdists>*/
 
-  var app = createApp();
+  var app = createApp(objectName);
 
   var instance = function() {
     app.cmd.apply(app, arguments);
   };
+  instance.app = app;
+  instance.defined = true
+
   if (oldObject) {
     // 处理临时 h5t 对象
     var items = [].concat(oldObject.p || [], oldObject.q || []);

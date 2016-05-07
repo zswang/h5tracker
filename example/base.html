@@ -14,18 +14,30 @@
   <button cmd="log">hello 11111111</button>
 </body>
 <script>
+h5t('speed.on', 'log', function (data) {
+  console.log('speed.on log data: %s', JSON.stringify(data));
+});
+h5t('speed.on', 'send', function (data) {
+  data.type = '囧';
+  console.log('speed.on send data: %s', JSON.stringify(data));
+});
+
 function doAction(cmd, element) {
   switch (cmd) {
     case 'log':
       h5t('speed.log', {
-        level: 'error',
+        level: 'info',
+        message: element.innerHTML
+      });
+      h5t('speed.send', {
+        level: 'info',
         message: element.innerHTML
       });
       break;
   }
 }
 
-document.addEventListener('touchend', function (e) {
+document.addEventListener('click', function (e) {
   var target = e.target;
   while (target) {
     var cmd = target.getAttribute && target.getAttribute('cmd');

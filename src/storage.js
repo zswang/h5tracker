@@ -7,17 +7,22 @@
  */
 function createStorage(argv) {
 
+  var instance = {};
+
   function save(item) {
 
   }
+  instance.save = save;
 
   function post(item) {
 
   }
+  instance.post = post;
 
   function scan() {
 
   }
 
+  return instance;
 }
 /*</function>*/

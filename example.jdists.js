@@ -1,7 +1,11 @@
 var assert = require('should');
-/*<jdists encoding="ejs" data="./package.json">*/
-var <%- name %> = require('../.');
-/*</jdists>*/
+
+var dom = require('./lib/dom');
+global.window = dom.window;
+global.document = dom.document;
+require('../.');
+var app = window.h5t.app;
+
 var util = require('util');
 
 var printLines = [];

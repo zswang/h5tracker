@@ -4,7 +4,7 @@
    '''<example>'''
    * @example base
     ```js
-    var emitter = h5tracker.createEmitter();
+    var emitter = app.createEmitter();
     emitter.on('click', function (data) {
       console.log('on', data);
     });
@@ -15,6 +15,12 @@
       console.log('bee', data);
     }
     emitter.on('click', bee);
+    emitter.on('click2', function (data) {
+      console.log('on', data);
+    });
+    emitter.emit('click2', 'hello 1');
+    // > on hello 1
+
     emitter.emit('click', 'hello 1');
     // > on hello 1
     // > once hello 1
@@ -105,7 +111,9 @@
      */
     function emit(event) {
       var argv = [].slice.call(arguments, 1);
-      callbacks.forEach(function (item) {
+      callbacks.filter(function (item) {
+        return item.event === event;
+      }).forEach(function (item) {
         item.fn.apply(instance, argv);
       });
       return instance;

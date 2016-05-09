@@ -107,7 +107,7 @@ function createApp(appName) {
     } else {
       var tracker = trackers[trackerName];
       if (!tracker) {
-        tracker = trackers[trackerName] = createTracker(trackerName);
+        tracker = trackers[trackerName] = createTracker(appName + '_' + trackerName);
       }
       if (typeof tracker[methodName] === 'function') {
         return tracker[methodName].apply(tracker, methodArgs);

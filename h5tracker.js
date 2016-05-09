@@ -44,6 +44,16 @@
     return result;
   }
   /*</function>*/
+/*<function name="newGuid">*/
+/**
+ * 比较大的概率上，生成唯一 ID
+ *
+ * @return {string} 返回生成的 ID
+ */
+function newGuid() {
+	return Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+}
+/*</function>*/
   /*<function name="createEmitter">*/
   /**
    * 创建事件对象
@@ -159,6 +169,50 @@
     return instance;
   }
   /*</function>*/
+/*<function name="createStorageList" depend="newGuid">*/
+/**
+ * 创建存储列表
+ *
+ * @param {string} listName 列表名称
+ * @param {Object} storageInstance 存储实例 localStorage | sessionStorage
+ * @return {Object} 返回存储列表对象
+ */
+function createStorageList(listName, storageInstance, storageExpires) {
+  var instance = {};
+  var timestampKey = listName + '_ts';
+  var list;
+  var timestamp = null;
+  storageInstance = storageInstance || localStorage;
+  storageExpires = storageExpires || 10 * 24 * 60 * 60;
+  /**
+   * 追加数据到列表中
+   *
+   * @param {Object} data 保存数据
+   * @param {Number} expire 过期时间，单位：秒
+   */
+  function push(data) {
+    if (storageInstance[timestampKey] !== timestamp) {
+      list = null;
+    }
+    if (!list) {
+      try {
+        list = JSON.parse(storageInstance[listName] || '[]');
+      } catch(ex) {
+        list = [];
+      }
+    }
+    list.push({
+      birthday: Date.now(),
+      expires: storageExpires,
+      data: data
+    });
+    storageInstance[timestampKey] = newGuid();
+    storageInstance[listName] = JSON.stringify(list);
+  }
+  instance.push = push;
+  return instance;
+}
+/*</function>*/
   /*<function name="createGetter" depend="camelCase">*/
   /**
    * 创建读取键值的方法
@@ -303,7 +357,56 @@
     };
   }
   /*</function>*/
-/*<function name="createTracker" depend="createEmitter,createGetter,createSetter">*/
+/*<function name="createStorage" depend="createStorageList">*/
+/**
+ * 创建存储器
+ *
+ * @param {Object} argv 配置项
+ * @return {Object} 返回存储器
+ */
+function createStorage(trackerName) {
+  var instance = {};
+  var storageListSend = createStorageList(trackerName + '_send');
+  var storageListLog = createStorageList(trackerName + '_send');
+  /**
+   * 记录日志
+   *
+   * @param {Object} data 日志数据
+   */
+  function log(data) {
+    storageListLog.push(data);
+  }
+  instance.log = log;
+  /**
+   * 拼装 URL 调用参数
+   *
+   * @param {Object} data 参数
+   * @return {string} 返回拼接的字符串
+   */
+  function buildQuery(data) {
+    return Object.keys(data).map(function(key) {
+      return encodeURIComponent(key) + '=' + encodeURIComponent(data[key]);
+    }).join('&');
+  }
+  function send(data, accept) {
+    storageListSend.push({
+      accept: accept,
+      query: buildQuery(data)
+    });
+  }
+  instance.send = send;
+  /**
+   * 清除过期数据
+   */
+  function scan() {
+    storageListLog.clean();
+    storageListSend.clean();
+  }
+  instance.scan = scan;
+  return instance;
+}
+/*</function>*/
+/*<function name="createTracker" depend="createEmitter,createGetter,createSetter,createStorage">*/
 /**
  * 创建追踪器
  *
@@ -319,6 +422,7 @@ function createTracker(name, storage) {
    */
   var instance = createEmitter();
   instance.name = name;
+  var storage = createStorage(name);
   /**
    * 日志接收地址
    *
@@ -374,7 +478,7 @@ function createTracker(name, storage) {
       return;
     }
     instance.emit('send', data);
-    // storage.send(data);
+    storage.send(data);
   }
   instance.send = send;
   /**
@@ -394,7 +498,7 @@ function createTracker(name, storage) {
     }
     instance.emit('log', data);
     console[data.level].call(console, data.message);
-    // storage.log(data);
+    storage.log(data);
   }
   instance.log = log;
   ['debug', 'info', 'warn', 'error', 'fatal'].forEach(function(level) {
@@ -425,16 +529,6 @@ function createTracker(name, storage) {
   }
   instance.create = create;
   return instance;
-}
-/*</function>*/
-/*<function name="newGuid">*/
-/**
- * 比较大的概率上，生成唯一 ID
- *
- * @return {string} 返回生成的 ID
- */
-function newGuid() {
-	return Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
 }
 /*</function>*/
 /*<function name="createApp" depend="createEmitter,createTracker,newGuid">*/
@@ -515,7 +609,7 @@ function createApp(appName) {
     } else {
       var tracker = trackers[trackerName];
       if (!tracker) {
-        tracker = trackers[trackerName] = createTracker(trackerName);
+        tracker = trackers[trackerName] = createTracker(appName + '_' + trackerName);
       }
       if (typeof tracker[methodName] === 'function') {
         return tracker[methodName].apply(tracker, methodArgs);

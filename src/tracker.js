@@ -7,7 +7,11 @@ var createGetter = require('jsets').createGetter;
 var createSetter = require('jsets').createSetter;
 /*</jdists>*/
 
-/*<function name="createTracker" depend="createEmitter,createGetter,createSetter">*/
+/*<jdists encoding="fndep" import="./storage.js" depend="createStorage">*/
+var createStorage = require('./storage').createStorage;
+/*</jdists>*/
+
+/*<function name="createTracker" depend="createEmitter,createGetter,createSetter,createStorage">*/
 /**
  * 创建追踪器
  *
@@ -23,6 +27,8 @@ function createTracker(name, storage) {
    */
   var instance = createEmitter();
   instance.name = name;
+
+  var storage = createStorage(name);
 
   /**
    * 日志接收地址
@@ -84,7 +90,7 @@ function createTracker(name, storage) {
       return;
     }
     instance.emit('send', data);
-    // storage.send(data);
+    storage.send(data);
   }
   instance.send = send;
   /**
@@ -104,7 +110,7 @@ function createTracker(name, storage) {
     }
     instance.emit('log', data);
     console[data.level].call(console, data.message);
-    // storage.log(data);
+    storage.log(data);
   }
   instance.log = log;
 

@@ -14,7 +14,7 @@ function createStorage(trackerName) {
   var instance = {};
 
   var storageListSend = createStorageList(trackerName + '_send');
-  var storageListLog = createStorageList(trackerName + '_send');
+  var storageListLog = createStorageList(trackerName + '_log');
 
   /**
    * 记录日志

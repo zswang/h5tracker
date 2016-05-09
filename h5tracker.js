@@ -1,4 +1,14 @@
 (function(document, window) {
+  /**
+   * @file h5tracker
+   *
+   * Logs Tracker of Mobile
+   * @author
+   *   zswang (http://weibo.com/zswang)
+   *   meglad (https://github.com/meglad)
+   * @version 0.0.1
+   * @date 2016-05-09
+   */
   var objectName = window.h5tObjectName || 'h5t';
   var oldObject = window[objectName];
   if (oldObject && oldObject.defined) { // 避免重复加载

@@ -1,14 +1,46 @@
 {
   "name": "h5tracker",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "main": "h5tracker.js",
+  "description": "Logs Tracker of Mobile",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zswang/h5tracker.git"
+  },
+  "keywords": [
+    "tracker",
+    "log",
+    "localStorage"
+  ],
   "scripts": {
-    "dist": "gulp",
+    "_update_version": "node version.js",
+    "dist": "npm run _update_version && gulp",
     "debug": "gulp debug",
     "example": "gulp example",
     "test": "istanbul cover --hook-run-in-context node_modules/mocha/bin/_mocha -- -R spec",
     "mocha": "mocha"
   },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/zswang/h5tracker/issues"
+  },
+  "homepage": "https://github.com/zswang/h5tracker",
+  "author": [
+    {
+      "name": "zswang",
+      "url": "http://weibo.com/zswang"
+    },
+    {
+      "name": "meglad",
+      "url": "https://github.com/meglad"
+    }
+  ],
+  "files": [
+    "lib",
+    "h5tracker.js",
+    "h5tracker.min.js",
+    "README.md"
+  ],
   "devDependencies": {
     "gulp": "^3.9.0",
     "gulp-open": "^2.0.0",
@@ -18,11 +50,9 @@
     "gulp-rename": "^1.2.2",
     "gulp-watch": "^4.3.5",
     "gulp-connect": "^4.0.0",
-
     "mocha": "^2.0.1",
     "istanbul": "^0.3.17",
     "should": "^4.1.0",
-
     "jsets": "^0.0.5"
   }
 }

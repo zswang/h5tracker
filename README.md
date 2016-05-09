@@ -126,7 +126,7 @@ tracker|追踪器名称，默认 false
 [{
 	createTime: 1455603047968, // 记录产生时间
 	expireTime: 1455603147968, // 记录过期时间
-	accept: 'http://log.ifreetalk.com/u.gif', // 日志接收地址
+	accept: 'http://log.ifreetalk.com/u.gif?', // 日志接收地址
 	data: 'ht=event&action=tap&page=home&xp=A(main)BC2A' // 数据
 }]
 ```

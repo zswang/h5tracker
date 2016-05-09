@@ -46,42 +46,32 @@ function createTracker(name, storage) {
   }, true);
 
   /**
-   * 设置或获取接收地址
-   *
-   * @param {string} url 接收地址
-   * @return {string=} 没有参数则返回接收地址
+   * 事件列表
+   * @type {Object}
    */
-  function accept(url) {
-    if (arguments.length === 0) {
-      return acceptUrl;
-    }
-    acceptUrl = url;
-  }
-  instance.accept = accept;
-
+  var event = {};
   /**
-   * 数据别名转换
-   *
-   * @param {Object} dict 处理函数
-   * @return {Function} 没有参数则返回回调
+   * 行为数组
+   * @type {Array}
    */
-  function parser(handler) {
+  var actionList = [];
 
-  }
-  instance.parser = parser;
-
+  var baseData = {};
   /**
-   * 设置或获取字段
-   *
-   * @param {string} name 字段名
-   * @param {Any=} value 字段值
-   * @return {string} 如果没有字段则返回字段值
+   * 事件回调方法
+   * @param  {String} name 事件名称
+   * @param  {} data 数据
    */
-  function field(name, value) {
-    if (arguments.length <= 1) {
-      return fields[name];
+  function eventBackCall(name, data) {
+    if (acceptUrl === undefined) {
+      actionList.push({
+        name: name,
+        data: data
+      });
+      return false;
     }
-    fields[name] = value;
+    event[name](data);
+    return true;
   }
 
   /**
@@ -90,7 +80,10 @@ function createTracker(name, storage) {
    * @param {Object} data 发送日志
    */
   function send(data) {
-    instance.emit('seasdfasdfnd', data);
+    if(!eventBackCall('send', data)){
+      return;
+    }
+    instance.emit('send', data);
     // storage.send(data);
   }
   instance.send = send;
@@ -106,8 +99,12 @@ function createTracker(name, storage) {
         level: 'debug'
       };
     }
-    instance.emit('lvfffog', data);
+    if(!eventBackCall('log', data)){
+      return;
+    }
+    instance.emit('log', data);
     console[data.level].call(console, data.message);
+    // storage.log(data);
   }
   instance.log = log;
 
@@ -119,6 +116,27 @@ function createTracker(name, storage) {
       });
     };
   });
+
+  // h5t('tracker.error', 'eraaesfads')
+  /**
+   * 创建
+   *
+   * @param {Object} options 配置对象
+   */
+  function create(options) {
+    acceptUrl = options.accept;
+    event = options.event || {};
+    baseData = options.data || {};
+
+    (actionList || []).forEach(function(action) {
+      var actionEvent = event[action.name];
+      if (actionEvent) {
+        actionEvent(action.data);
+      }
+    });
+    actionList = null;
+  }
+  instance.create = create;
 
   return instance;
 }

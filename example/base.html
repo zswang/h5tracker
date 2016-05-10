@@ -46,9 +46,9 @@ document.addEventListener('click', function(e) {
   if (!timer) {
     var timer = setTimeout(function() {
       h5t('speed.create', {
-        accept: '', // 日志接收地址
+        accept: 'http://192.168.100.41', // 日志接收地址
         data: { // 基准数据，即：每次上报都带上
-          dm: document.location.domain,
+          dm: document.location.origin,
           lo: document.location.pathname
         },
         event: { // 事件
@@ -56,15 +56,14 @@ document.addEventListener('click', function(e) {
 
           },
           send: function(data) { // 发送日志
-            data.send = '发送';
+            data.callback = 'send';
           },
           log: function(data) { // 记录日志
-            data.log = '日志';
+            data.callback = 'log';
           },
         }
       });
-      timer = null;
-    }, 10);
+    }, 2000);
   }
   var target = e.target;
   while (target) {

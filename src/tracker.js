@@ -61,7 +61,10 @@ function createTracker(name, storage) {
    * @type {Array}
    */
   var actionList = [];
-
+  /**
+   * 基础数据
+   * @type {Object}
+   */
   var baseData = {};
   /**
    * 事件回调方法
@@ -69,6 +72,7 @@ function createTracker(name, storage) {
    * @param  {} data 数据
    */
   function eventBackCall(name, data) {
+    // 没有创建 行为存储
     if (acceptUrl === undefined) {
       actionList.push({
         name: name,
@@ -76,7 +80,16 @@ function createTracker(name, storage) {
       });
       return false;
     }
-    event[name](data);
+    // 已经创建 合并基础数据
+    (Object.keys(baseData) || []).forEach(function(key) {
+      if (data[key] === undefined) {
+        data[key] = baseData[key];
+      }
+    });
+    // 执行 回调
+    if(event[name] !== undefined){
+      event[name](data);
+    }
     return true;
   }
 
@@ -86,7 +99,7 @@ function createTracker(name, storage) {
    * @param {Object} data 发送日志
    */
   function send(data) {
-    if(!eventBackCall('send', data)){
+    if (!eventBackCall('send', data)) {
       return;
     }
     instance.emit('send', data);
@@ -105,7 +118,7 @@ function createTracker(name, storage) {
         level: 'debug'
       };
     }
-    if(!eventBackCall('log', data)){
+    if (!eventBackCall('log', data)) {
       return;
     }
     instance.emit('log', data);
@@ -131,13 +144,21 @@ function createTracker(name, storage) {
    */
   function create(options) {
     acceptUrl = options.accept;
+    if(!acceptUrl){
+      console.error('h5tracker: create() acceptUrl not is void');
+      return;
+    }
     event = options.event || {};
     baseData = options.data || {};
 
     (actionList || []).forEach(function(action) {
-      var actionEvent = event[action.name];
-      if (actionEvent) {
-        actionEvent(action.data);
+      switch (action.name) {
+        case 'send':
+          send(action.data);
+          break;
+        case 'log':
+          log(action.data);
+          break;
       }
     });
     actionList = null;

@@ -14,6 +14,10 @@ function print() {
 describe("./src/app.js", function () {
 });
 describe("./src/common.js", function () {
+  it("newGuid:base", function () {
+  print(/^[a-z0-9]+$/.test(app.newGuid()));
+  assert.equal(printLines.join("\n"), "true"); printLines = [];
+  });
 });
 describe("./src/event.js", function () {
   it("base", function () {
@@ -166,4 +170,76 @@ describe("./src/storage.js", function () {
   });
 });
 describe("./src/tracker.js", function () {
+  it("createTracker():base", function () {
+  var tracker = app.createTracker('base');
+  var count = 0;
+  tracker.error('error1');
+  tracker.send({
+    ht: 'pageview'
+  });
+  tracker.on('log', function (data) {
+    print(count++);
+    assert.equal(printLines.join("\n"), "0"); printLines = [];
+    print(data.level);
+    assert.equal(printLines.join("\n"), "error"); printLines = [];
+    print(data.message);
+    assert.equal(printLines.join("\n"), "error1"); printLines = [];
+  });
+  tracker.create({
+    accept: 'http://host/path/to',
+    data: {
+      do: 'h5t.com',
+      lo: '/home'
+    },
+    event: {
+      send: function (data) {
+        print(count++);
+        assert.equal(printLines.join("\n"), "2"); printLines = [];
+        print(data.do);
+        assert.equal(printLines.join("\n"), "h5t.com"); printLines = [];
+        print(data.lo);
+        assert.equal(printLines.join("\n"), "/home"); printLines = [];
+      },
+      log: function (data) {
+        print(count++);
+        assert.equal(printLines.join("\n"), "1"); printLines = [];
+        print(data.level);
+        assert.equal(printLines.join("\n"), "error"); printLines = [];
+        print(data.message);
+        assert.equal(printLines.join("\n"), "error1"); printLines = [];
+      }
+    },
+  });
+  });
+  it("set() & get():base", function () {
+    var tracker = app.createTracker('setter');
+    tracker.set({
+      x: 1,
+      y: 2
+    });
+    tracker.get(function (y, x) {
+      print(x, y);
+      assert.equal(printLines.join("\n"), "1 2"); printLines = [];
+    });
+  });
+  it("send():case 1", function () {
+    var tracker = app.createTracker('send_case_1');
+    tracker.set({
+      x: 1,
+      y: 2
+    });
+    tracker.send({z: 3});
+    tracker.send({z: null});
+    tracker.create({
+      accept: '/host/case1',
+      data: {
+        z: 'z3'
+      }
+    });
+    var data = JSON.parse(localStorage.send_case_1_send);
+    print(data[0].data.query);
+    assert.equal(printLines.join("\n"), "z=3&x=1&y=2"); printLines = [];
+    print(data[1].data.query);
+    assert.equal(printLines.join("\n"), "x=1&y=2"); printLines = [];
+  });
 });

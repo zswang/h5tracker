@@ -33,10 +33,15 @@ function createStorage(trackerName) {
    * @param {Object} data 参数
    * @return {string} 返回拼接的字符串
    */
-  function buildQuery(data) {
-    return Object.keys(data).map(function(key) {
-      return encodeURIComponent(key) + '=' + encodeURIComponent(data[key]);
-    }).join('&');
+  function queryFrom(data) {
+    var result = [];
+    Object.keys(data).forEach(function(key) {
+      if (data[key] === null) {
+        return;
+      }
+      result.push(encodeURIComponent(key) + '=' + encodeURIComponent(data[key]));
+    });
+    return result.join('&');
   }
 
   /**
@@ -66,7 +71,7 @@ function createStorage(trackerName) {
   function send(data, accept) {
     var id = storageListSend.push({
       accept: accept,
-      query: buildQuery(data)
+      query: queryFrom(data)
     });
     scan();
   }

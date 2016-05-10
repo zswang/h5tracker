@@ -16,10 +16,59 @@ var createStorage = require('./storage').createStorage;
  * 创建追踪器
  *
  * @param {string} name 追踪器名称
- * @param {string} storage 存储对象
  * @return {Object} 返回追踪器实例
+ '''<example>'''
+ * @example createTracker():base
+  ```js
+  var tracker = app.createTracker('base');
+  var count = 0;
+  tracker.error('error1');
+  tracker.send({
+    ht: 'pageview'
+  });
+  tracker.on('log', function (data) {
+    console.log(count++);
+    // > 0
+
+    console.log(data.level);
+    // > error
+
+    console.log(data.message);
+    // > error1
+  });
+  tracker.create({
+    accept: 'http://host/path/to',
+    data: {
+      do: 'h5t.com',
+      lo: '/home'
+    },
+    event: {
+      send: function (data) {
+        console.log(count++);
+        // > 2
+
+        console.log(data.do);
+        // > h5t.com
+
+        console.log(data.lo);
+        // > /home
+      },
+      log: function (data) {
+        console.log(count++);
+        // > 1
+
+        console.log(data.level);
+        // > error
+
+        console.log(data.message);
+        // > error1
+      }
+    },
+  });
+  ```
+ '''</example>'''
  */
-function createTracker(name, storage) {
+function createTracker(name) {
   /**
    * 追踪器实例
    *
@@ -31,79 +80,110 @@ function createTracker(name, storage) {
   var storage = createStorage(name);
 
   /**
-   * 日志接收地址
-   *
-   * @type {string}
+   * 是否被创建过
    */
-  var acceptUrl;
+  var created;
+
   /**
    * 字段列表
    *
    * @type {Object}
    */
   var fields = {};
+  /**
+   * 设置获取字段
+   *
+   '''<example>'''
+   * @example set() & get():base
+    ```js
+    var tracker = app.createTracker('setter');
+    tracker.set({
+      x: 1,
+      y: 2
+    });
+    tracker.get(function (y, x) {
+      console.log(x, y);
+      // > 1 2
+    });
 
-  instance.set = createSetter(instance, function(name, value) {
+    ```
+   '''</example>'''
+   */
+  instance.set = createSetter(instance, function (name, value) {
     fields[name] = value;
   }, true);
-
-  instance.get = createGetter(instance, function(name) {
+  instance.get = createGetter(instance, function (name) {
     return fields[name];
   }, true);
 
-  /**
-   * 事件列表
-   * @type {Object}
-   */
-  var event = {};
+
   /**
    * 行为数组
+   *
    * @type {Array}
    */
   var actionList = [];
   /**
-   * 基础数据
+   * 配置项
+   *
    * @type {Object}
    */
-  var baseData = {};
-  /**
-   * 事件回调方法
-   * @param  {String} name 事件名称
-   * @param  {} data 数据
-   */
-  function eventBackCall(name, data) {
-    // 没有创建 行为存储
-    if (acceptUrl === undefined) {
-      actionList.push({
-        name: name,
-        data: data
-      });
-      return false;
-    }
-    // 已经创建 合并基础数据
-    (Object.keys(baseData) || []).forEach(function(key) {
-      if (data[key] === undefined) {
-        data[key] = baseData[key];
-      }
-    });
-    // 执行 回调
-    if(event[name] !== undefined){
-      event[name](data);
-    }
-    return true;
-  }
+  var options;
 
   /**
    * 发送数据
    *
    * @param {Object} data 发送日志
+   '''<example>'''
+   * @example send():case 1
+    ```js
+    var tracker = app.createTracker('send_case_1');
+    tracker.set({
+      x: 1,
+      y: 2
+    });
+    tracker.send({z: 3});
+    tracker.send({z: null});
+    tracker.create({
+      accept: '/host/case1',
+      data: {
+        z: 'z3'
+      }
+    });
+
+    var data = JSON.parse(localStorage.send_case_1_send);
+
+    console.log(data[0].data.query);
+    // > z=3&x=1&y=2
+
+    console.log(data[1].data.query);
+    // > x=1&y=2
+    ```
+   '''</example>'''
    */
   function send(data) {
-    if (!eventBackCall('send', data)) {
+    if (!created) {
+      actionList.push({
+        name: 'send',
+        data: data
+      });
       return;
     }
-    instance.emit('send', data);
-    storage.send(data);
+    // merge data
+    var item = {};
+    if (options.data) {
+      Object.keys(options.data).forEach(function (key) {
+        item[key] = options.data[key];
+      });
+    }
+    Object.keys(fields).forEach(function (key) {
+      item[key] = fields[key];
+    });
+    Object.keys(data).forEach(function (key) {
+      item[key] = data[key];
+    });
+    instance.emit('send', item);
+    storage.send(item, options.accept);
   }
   instance.send = send;
   /**
@@ -112,23 +192,33 @@ function createTracker(name, storage) {
    * @param {Object|String} data 日志参数
    */
   function log(data) {
+    if (!created) {
+      actionList.push({
+        name: 'log',
+        data: data
+      });
+      return;
+    }
     if (typeof data === 'string') {
       data = {
         message: data,
         level: 'debug'
       };
     }
-    if (!eventBackCall('log', data)) {
+    if (!data.level) {
+      console.error('log level is undefined.');
       return;
     }
     instance.emit('log', data);
-    console[data.level].call(console, data.message);
+    /*<debug>*/
+    // console[data.level].call(console, data.message);
+    /*</debug>*/
     storage.log(data);
   }
   instance.log = log;
 
-  ['debug', 'info', 'warn', 'error', 'fatal'].forEach(function(level) {
-    instance[level] = function(message) {
+  ['debug', 'info', 'warn', 'error', 'fatal'].forEach(function (level) {
+    instance[level] = function (message) {
       log({
         level: level,
         message: message
@@ -142,25 +232,28 @@ function createTracker(name, storage) {
    *
    * @param {Object} options 配置对象
    */
-  function create(options) {
-    acceptUrl = options.accept;
-    if(!acceptUrl){
-      console.error('h5tracker: create() acceptUrl not is void');
+  function create(opts) {
+    if (created) {
+      console.error('h5tracker: is repeat created');
       return;
     }
-    event = options.event || {};
-    baseData = options.data || {};
+    created = true;
+    options = opts || {};
 
-    (actionList || []).forEach(function(action) {
-      switch (action.name) {
-        case 'send':
-          send(action.data);
-          break;
-        case 'log':
-          log(action.data);
-          break;
-      }
+    // 绑定事件
+    if (opts.event) {
+      Object.keys(opts.event).forEach(function (key) {
+        var fn = opts.event[key];
+        if (typeof fn === 'function') {
+          instance.on(key, fn);
+        }
+      });
+    }
+
+    actionList.forEach(function (item) {
+      instance[item.name](item.data);
     });
+
     actionList = null;
   }
   instance.create = create;

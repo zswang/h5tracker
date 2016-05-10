@@ -1,13 +1,10 @@
 /*<jdists encoding="fndep" import="./common.js" depend="newGuid">*/
-var common = require('./common');
-var newGuid = common.newGuid;
+var newGuid = require('./common').newGuid;
 /*</jdists>*/
 
 /*<jdists encoding="fndep" import="./event.js" depend="createEmitter">*/
 var createEmitter = require('./event').createEmitter;
 /*</jdists>*/
-
-exports.createEmitter = createEmitter;
 
 /*<jdists encoding="fndep" import="./tracker.js" depend="createTracker">*/
 var createTracker = require('./tracker').createTracker;
@@ -38,6 +35,8 @@ function createApp(appName) {
   instance.createStorage = createStorage;
   instance.createStorageList = createStorageList;
   instance.createTracker = createTracker;
+  instance.newGuid = newGuid;
+  instance.createApp = createApp;
 
   trackers[instance.name] = instance;
 
@@ -125,63 +124,5 @@ function createApp(appName) {
   return instance;
 }
 /*</function>*/
+
 exports.createApp = createApp;
-
-
-/*<remove>
-console.log(newGuid());
-</remove>*/
-
-// App.init(argv)
-
-// // 生命周期
-// App.start()
-// App.resume()
-// App.pause()
-// App.exit()
-
-// App.command();
-
-
-
-// import Storage from "src/storage";
-
-
-// class App {
-// 	constructor(args) {
-// 		// code
-// 	}
-// 	// methods
-// }
-
-// h5t('init', {
-// 	post: '',
-// 	sessionTime: 30000
-// });
-
-// h5t('pv.parser', {
-// 	'title': 't',
-// 	'time': false
-// });
-
-// h5t('set', 'title', '');
-
-// h5t('pv.init', {
-// 	post: ''
-// });
-
-// h5t('pv.send', 'pageview', {
-// 	title: ''
-// });
-
-// h5t('pv.on', 'createSesstion', function () {
-// 	this.send('pageview');
-// });
-
-// h5t('pv.on', 'destroySession', function () {
-
-// });
-//
-//
-
-

@@ -21,6 +21,10 @@ class EventTarget {
     if (eventName instanceof HTMLEvents) {
       eventName = eventName.type;
     }
+    var fn = this['on' + eventName];
+    if (typeof fn === 'function') {
+      fn.call(this, eventData);
+    }
     var self = this;
     this._listeners.forEach(function(item) {
       if (item[0] === eventName) {
@@ -84,6 +88,24 @@ class HTMLHtmlElement extends HTMLElement {
   }
 }
 
+class HTMLImage extends HTMLElement {
+  constructor() {
+    super('img');
+  }
+  get src() {
+    return this._src;
+  }
+  set src(value) {
+    this._src = value;
+    if (value === '#error') {
+      this.dispatchEvent('error');
+    } else {
+      this.dispatchEvent('load');
+    }
+  }
+}
+
+
 class HTMLDocument extends Node {
   constructor() {
     super('#document');
@@ -96,6 +118,8 @@ class HTMLDocument extends Node {
     switch (tagName) {
       case 'iframe':
         return new HTMLIFrameElement();
+      case 'img':
+        return new HTMLImage();
     }
     return new HTMLElement(tagName);
   }
@@ -109,6 +133,10 @@ class HTMLDocument extends Node {
 
   get documentElement() {
     return this._documentElement;
+  }
+
+  querySelector() {
+    return null;
   }
 
   getElementById(id) {
@@ -133,8 +161,16 @@ class HTMLWindow extends EventTarget {
   constructor() {
     super();
     this._document = new HTMLDocument();
+    this._localStorage = {};
+    this._sessionStorage = {};
   }
 
+  get localStorage() {
+    return this._localStorage;
+  }
+  get sessionStorage() {
+    return this._sessionStorage;
+  }
   get document() {
     return this._document;
   }
@@ -154,4 +190,6 @@ class HTMLEvents {
 var window = new HTMLWindow();
 exports.window = window;
 exports.document = window.document;
+exports.localStorage = window.localStorage;
+exports.sessionStorage = window.sessionStorage;
 

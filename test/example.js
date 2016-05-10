@@ -2,6 +2,8 @@ var assert = require('should');
 var dom = require('./lib/dom');
 global.window = dom.window;
 global.document = dom.document;
+global.localStorage = dom.localStorage;
+global.sessionStorage = dom.sessionStorage;
 require('../.');
 var app = window.h5t.app;
 var util = require('util');
@@ -43,6 +45,89 @@ describe("./src/event.js", function () {
 describe("./src/index.js", function () {
 });
 describe("./src/inline.js", function () {
+});
+describe("./src/storage-list.js", function () {
+  it("createStorageList():storageInstance => sessionStorage", function () {
+    var storageList = app.createStorageList('h5t_base1_log', sessionStorage);
+    storageList.push({
+      level: 'info',
+      message: 'click button1'
+    });
+    var data = JSON.parse(sessionStorage.h5t_base1_log);
+    print(data.length);
+    assert.equal(printLines.join("\n"), "1"); printLines = [];
+  });
+  it("createStorageList():storageExpires => 10000", function () {
+    var storageList = app.createStorageList('h5t_base2_log', localStorage, 10000);
+    storageList.push({
+      level: 'info',
+      message: 'click button1'
+    });
+    var data = JSON.parse(localStorage.h5t_base2_log);
+    print(data[0].expires);
+    assert.equal(printLines.join("\n"), "10000"); printLines = [];
+  });
+  it("push():base", function () {
+    var storageList = app.createStorageList('h5t_push_log');
+    storageList.push({
+      level: 'info',
+      message: 'click button1'
+    });
+    storageList.push({
+      level: 'info',
+      message: 'click button2'
+    });
+    var data = JSON.parse(localStorage.h5t_push_log);
+    print(data.length);
+    assert.equal(printLines.join("\n"), "2"); printLines = [];
+    print(data[0].data.message);
+    assert.equal(printLines.join("\n"), "click button1"); printLines = [];
+    print(data[1].data.message);
+    assert.equal(printLines.join("\n"), "click button2"); printLines = [];
+  });
+  it("clean():base", function () {
+    var storageList = app.createStorageList('h5t_clean_log');
+    storageList.push({
+      level: 'info',
+      message: 'click button1'
+    });
+    storageList.push({
+      level: 'info',
+      message: 'click button2'
+    });
+    storageList.push({
+      level: 'info',
+      message: 'click button3'
+    });
+    var data = JSON.parse(localStorage.h5t_clean_log);
+    data[1].birthday = 0;
+    localStorage.h5t_clean_log = JSON.stringify(data);
+    storageList.clean();
+    data = JSON.parse(localStorage.h5t_clean_log);
+    print(data.length);
+    assert.equal(printLines.join("\n"), "2"); printLines = [];
+    print(data[0].data.message);
+    assert.equal(printLines.join("\n"), "click button1"); printLines = [];
+    print(data[1].data.message);
+    assert.equal(printLines.join("\n"), "click button3"); printLines = [];
+  });
+  it("remove():base", function () {
+    var storageList = app.createStorageList('h5t_remove_log');
+    var id1 = storageList.push({
+      level: 'info',
+      message: 'click button1'
+    });
+    var id2 = storageList.push({
+      level: 'info',
+      message: 'click button2'
+    });
+    storageList.remove(id1);
+    var data = JSON.parse(localStorage.h5t_remove_log);
+    print(data.length);
+    assert.equal(printLines.join("\n"), "1"); printLines = [];
+    print(data[0].id === id2);
+    assert.equal(printLines.join("\n"), "true"); printLines = [];
+  });
 });
 describe("./src/storage.js", function () {
 });

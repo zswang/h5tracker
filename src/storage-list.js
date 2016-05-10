@@ -134,6 +134,37 @@ function createStorageList(listName, storageInstance, storageExpires) {
   instance.push = push;
 
   /**
+   * 去列表的最后一个元素
+   *
+   * @return {Object} 返回最后一个元素，如果列表为空则返回 undefined
+   '''<example>'''
+   * @example toArray():base
+    ```js
+    var storageList = app.createStorageList('h5t_pop_log');
+    storageList.push({
+      level: 'info',
+      message: 'click button1'
+    });
+    storageList.push({
+      level: 'info',
+      message: 'click button2'
+    });
+    var data = JSON.parse(localStorage.h5t_pop_log);
+    var items = storageList.toArray();
+    console.log(items.pop().data.message);
+    // > click button2
+    console.log(items.pop().data.message);
+    // > click button1
+    ```
+   '''</example>'''
+   */
+  function toArray() {
+    load();
+    return list.slice();
+  }
+  instance.toArray = toArray;
+
+  /**
    * 清除清除过期数据
    *
    * @return {Number} 返回被清除的记录数
@@ -176,7 +207,7 @@ function createStorageList(listName, storageInstance, storageExpires) {
     var now = Date.now();
 
     if (minExpiresTime !== null) {
-      if (minExpiresTime > now) { // 有记录要过期
+      if (minExpiresTime < now) { // 有记录要过期
         minExpiresTime = null;
       } else { // 没有记录需要清除
         return count;
@@ -184,7 +215,7 @@ function createStorageList(listName, storageInstance, storageExpires) {
     }
 
     list = list.filter(function (item) {
-      var expiresTime = item.birthday + item.expires;
+      var expiresTime = item.birthday + item.expires * 1000;
       if (expiresTime < now) { // 已经过期
         count++;
         return false;

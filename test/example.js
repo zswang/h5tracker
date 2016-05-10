@@ -85,6 +85,23 @@ describe("./src/storage-list.js", function () {
     print(data[1].data.message);
     assert.equal(printLines.join("\n"), "click button2"); printLines = [];
   });
+  it("toArray():base", function () {
+    var storageList = app.createStorageList('h5t_pop_log');
+    storageList.push({
+      level: 'info',
+      message: 'click button1'
+    });
+    storageList.push({
+      level: 'info',
+      message: 'click button2'
+    });
+    var data = JSON.parse(localStorage.h5t_pop_log);
+    var items = storageList.toArray();
+    print(items.pop().data.message);
+    assert.equal(printLines.join("\n"), "click button2"); printLines = [];
+    print(items.pop().data.message);
+    assert.equal(printLines.join("\n"), "click button1"); printLines = [];
+  });
   it("clean():base", function () {
     var storageList = app.createStorageList('h5t_clean_log');
     storageList.push({
@@ -130,6 +147,23 @@ describe("./src/storage-list.js", function () {
   });
 });
 describe("./src/storage.js", function () {
+  it("send():base", function () {
+    var storage = app.createStorage('h5t_scan');
+    storage.send({
+      hisType: 'pageview'
+    }, '/host/path/to/t.gif');
+    var data = JSON.parse(localStorage.h5t_scan_send);
+    print(data[0].data.accept);
+    assert.equal(printLines.join("\n"), "/host/path/to/t.gif"); printLines = [];
+    print(data[0].data.query);
+    assert.equal(printLines.join("\n"), "hisType=pageview"); printLines = [];
+  });
+  it("scan():base", function () {
+    var storage = app.createStorage('h5t_scan');
+    storage.send({
+      hisType: 'pageview'
+    }, '/host/path/to/t.gif');
+  });
 });
 describe("./src/tracker.js", function () {
 });

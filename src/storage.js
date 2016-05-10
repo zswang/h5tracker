@@ -45,21 +45,67 @@ function createStorage(trackerName) {
    * @param {Object} data 发送数据
    * @param {string} accept 接收地址
    * @return {string} 返回记录 ID
+   '''<example>'''
+   * @example send():base
+    ```js
+    var storage = app.createStorage('h5t_scan');
+    storage.send({
+      hisType: 'pageview'
+    }, '/host/path/to/t.gif');
+
+    var data = JSON.parse(localStorage.h5t_scan_send);
+
+    console.log(data[0].data.accept);
+    // > /host/path/to/t.gif
+
+    console.log(data[0].data.query);
+    // > hisType=pageview
+    ```
+   '''</example>'''
    */
   function send(data, accept) {
-    return storageListSend.push({
+    var id = storageListSend.push({
       accept: accept,
       query: buildQuery(data)
     });
+    scan();
   }
   instance.send = send;
 
   /**
    * 清除过期数据
-   */
+   *
+   '''<example>'''
+   * @example scan():base
+    ```js
+    var storage = app.createStorage('h5t_scan');
+    storage.send({
+      hisType: 'pageview'
+    }, '/host/path/to/t.gif');
+    ```
+   '''</example>'''
+  */
   function scan() {
     storageListLog.clean();
     storageListSend.clean();
+
+    var item = storageListSend.toArray().pop();
+    if (item) {
+      var img = document.createElement('img');
+      img.onload = function () {
+        storageListSend.remove(item.id);
+        delete instance[item.id];
+
+        setTimeout(function () {
+          scan();
+        }, 1000);
+      };
+      // accept = 'host/path/to.gif'
+      // accept = 'host/path/to.gif?from=qq'
+      var accept = item.data.accept;
+      img.src = accept + (accept.indexOf('?') < 0 ? '?' : "&") + item.data.query;
+      instance[item.id] = img;
+    }
   }
   instance.scan = scan;
 

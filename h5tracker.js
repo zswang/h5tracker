@@ -6,7 +6,7 @@
    * @author
    *   zswang (http://weibo.com/zswang)
    *   meglad (https://github.com/meglad)
-   * @version 0.0.10
+   * @version 0.0.23
    * @date 2016-05-10
    */
   var objectName = window.h5tObjectName || 'h5t';
@@ -300,6 +300,36 @@ function createStorageList(listName, storageInstance, storageExpires) {
   }
   instance.push = push;
   /**
+   * 去列表的最后一个元素
+   *
+   * @return {Object} 返回最后一个元素，如果列表为空则返回 undefined
+   '''<example>'''
+   * @example toArray():base
+    ```js
+    var storageList = app.createStorageList('h5t_pop_log');
+    storageList.push({
+      level: 'info',
+      message: 'click button1'
+    });
+    storageList.push({
+      level: 'info',
+      message: 'click button2'
+    });
+    var data = JSON.parse(localStorage.h5t_pop_log);
+    var items = storageList.toArray();
+    console.log(items.pop().data.message);
+    // > click button2
+    console.log(items.pop().data.message);
+    // > click button1
+    ```
+   '''</example>'''
+   */
+  function toArray() {
+    load();
+    return list.slice();
+  }
+  instance.toArray = toArray;
+  /**
    * 清除清除过期数据
    *
    * @return {Number} 返回被清除的记录数
@@ -338,14 +368,14 @@ function createStorageList(listName, storageInstance, storageExpires) {
     var count = 0;
     var now = Date.now();
     if (minExpiresTime !== null) {
-      if (minExpiresTime > now) { // 有记录要过期
+      if (minExpiresTime < now) { // 有记录要过期
         minExpiresTime = null;
       } else { // 没有记录需要清除
         return count;
       }
     }
     list = list.filter(function (item) {
-      var expiresTime = item.birthday + item.expires;
+      var expiresTime = item.birthday + item.expires * 1000;
       if (expiresTime < now) { // 已经过期
         count++;
         return false;
@@ -586,20 +616,61 @@ function createStorage(trackerName) {
    * @param {Object} data 发送数据
    * @param {string} accept 接收地址
    * @return {string} 返回记录 ID
+   '''<example>'''
+   * @example send():base
+    ```js
+    var storage = app.createStorage('h5t_scan');
+    storage.send({
+      hisType: 'pageview'
+    }, '/host/path/to/t.gif');
+    var data = JSON.parse(localStorage.h5t_scan_send);
+    console.log(data[0].data.accept);
+    // > /host/path/to/t.gif
+    console.log(data[0].data.query);
+    // > hisType=pageview
+    ```
+   '''</example>'''
    */
   function send(data, accept) {
-    return storageListSend.push({
+    var id = storageListSend.push({
       accept: accept,
       query: buildQuery(data)
     });
+    scan();
   }
   instance.send = send;
   /**
    * 清除过期数据
-   */
+   *
+   '''<example>'''
+   * @example scan():base
+    ```js
+    var storage = app.createStorage('h5t_scan');
+    storage.send({
+      hisType: 'pageview'
+    }, '/host/path/to/t.gif');
+    ```
+   '''</example>'''
+  */
   function scan() {
     storageListLog.clean();
     storageListSend.clean();
+    var item = storageListSend.toArray().pop();
+    if (item) {
+      var img = document.createElement('img');
+      img.onload = function () {
+        console.log('img.onload');
+        storageListSend.remove(item.id);
+        delete instance[item.id];
+        setTimeout(function () {
+          scan();
+        }, 1000);
+      };
+      // accpet = 'host/path/to.gif'
+      // accpet = 'host/path/to.gif?from=qq'
+      img.src = item.data.accpet + '?' + item.data.query;
+      instance[item.id] = img;
+    }
   }
   instance.scan = scan;
   return instance;
@@ -650,6 +721,10 @@ function createTracker(name, storage) {
    * @type {Array}
    */
   var actionList = [];
+  /**
+   * 基础数据
+   * @type {Object}
+   */
   var baseData = {};
   /**
    * 事件回调方法
@@ -657,6 +732,7 @@ function createTracker(name, storage) {
    * @param  {} data 数据
    */
   function eventBackCall(name, data) {
+    // 没有创建 行为存储
     if (acceptUrl === undefined) {
       actionList.push({
         name: name,
@@ -664,7 +740,16 @@ function createTracker(name, storage) {
       });
       return false;
     }
-    event[name](data);
+    // 已经创建 合并基础数据
+    (Object.keys(baseData) || []).forEach(function(key) {
+      if (data[key] === undefined) {
+        data[key] = baseData[key];
+      }
+    });
+    // 执行 回调
+    if(event[name] !== undefined){
+      event[name](data);
+    }
     return true;
   }
   /**
@@ -673,7 +758,7 @@ function createTracker(name, storage) {
    * @param {Object} data 发送日志
    */
   function send(data) {
-    if(!eventBackCall('send', data)){
+    if (!eventBackCall('send', data)) {
       return;
     }
     instance.emit('send', data);
@@ -692,7 +777,7 @@ function createTracker(name, storage) {
         level: 'debug'
       };
     }
-    if(!eventBackCall('log', data)){
+    if (!eventBackCall('log', data)) {
       return;
     }
     instance.emit('log', data);
@@ -716,12 +801,20 @@ function createTracker(name, storage) {
    */
   function create(options) {
     acceptUrl = options.accept;
+    if(!acceptUrl){
+      console.error('h5tracker: create() acceptUrl not is void');
+      return;
+    }
     event = options.event || {};
     baseData = options.data || {};
     (actionList || []).forEach(function(action) {
-      var actionEvent = event[action.name];
-      if (actionEvent) {
-        actionEvent(action.data);
+      switch (action.name) {
+        case 'send':
+          send(action.data);
+          break;
+        case 'log':
+          log(action.data);
+          break;
       }
     });
     actionList = null;

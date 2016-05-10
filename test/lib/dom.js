@@ -97,11 +97,14 @@ class HTMLImage extends HTMLElement {
   }
   set src(value) {
     this._src = value;
-    if (value === '#error') {
-      this.dispatchEvent('error');
-    } else {
-      this.dispatchEvent('load');
-    }
+    var self = this;
+    setTimeout(function () {
+      if (value === '#error') {
+        self.dispatchEvent('error');
+      } else {
+        self.dispatchEvent('load');
+      }
+    }, 1000);
   }
 }
 

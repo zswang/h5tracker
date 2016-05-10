@@ -33,7 +33,11 @@ function createApp(appName) {
   console.log('createApp() appName: %s', appName);
 
   var instance = createTracker('main');
+
   instance.createEmitter = createEmitter;
+  instance.createStorage = createStorage;
+  instance.createStorageList = createStorageList;
+  instance.createTracker = createTracker;
 
   trackers[instance.name] = instance;
 

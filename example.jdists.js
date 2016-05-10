@@ -3,6 +3,9 @@ var assert = require('should');
 var dom = require('./lib/dom');
 global.window = dom.window;
 global.document = dom.document;
+global.localStorage = dom.localStorage;
+global.sessionStorage = dom.sessionStorage;
+
 require('../.');
 var app = window.h5t.app;
 

@@ -20,9 +20,10 @@ function createStorage(trackerName) {
    * 记录日志
    *
    * @param {Object} data 日志数据
+   * @return {string} 返回记录 ID
    */
   function log(data) {
-    storageListLog.push(data);
+    return storageListLog.push(data);
   }
   instance.log = log;
 
@@ -38,8 +39,15 @@ function createStorage(trackerName) {
     }).join('&');
   }
 
+  /**
+   * 发送数据
+   *
+   * @param {Object} data 发送数据
+   * @param {string} accept 接收地址
+   * @return {string} 返回记录 ID
+   */
   function send(data, accept) {
-    storageListSend.push({
+    return storageListSend.push({
       accept: accept,
       query: buildQuery(data)
     });

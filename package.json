@@ -1,6 +1,6 @@
 {
   "name": "h5tracker",
-  "version": "0.0.1",
+  "version": "0.0.10",
   "main": "h5tracker.js",
   "description": "Logs Tracker of Mobile",
   "repository": {
@@ -14,7 +14,8 @@
   ],
   "scripts": {
     "_update_version": "node version.js",
-    "dist": "npm run _update_version && gulp",
+    "_dist": "gulp",
+    "dist": "npm run _update_version && npm run _dist && npm run example && npm test",
     "debug": "gulp debug",
     "example": "gulp example",
     "test": "istanbul cover --hook-run-in-context node_modules/mocha/bin/_mocha -- -R spec",

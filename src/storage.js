@@ -66,12 +66,25 @@ function createStorage(trackerName) {
     console.log(data[0].data.query);
     // > hisType=pageview
     ```
+   * @example send():acceptStyle
+    ```js
+    var storage = app.createStorage('h5t_scan2');
+    storage.send({
+      hisType: 'pageview'
+    }, '/host/path/to/t.gif', 'path');
+
+    var data = JSON.parse(localStorage.h5t_scan2_send);
+
+    console.log(data[0].data.acceptStyle);
+    // > path
+    ```
    '''</example>'''
    */
-  function send(data, accept) {
+  function send(data, accept, acceptStyle) {
     var id = storageListSend.push({
       accept: accept,
-      query: queryFrom(data)
+      acceptStyle: acceptStyle, // 发送格式 "path" | "query"
+      query: queryFrom(data),
     });
     scan();
   }
@@ -94,6 +107,9 @@ function createStorage(trackerName) {
     storageListLog.clean();
     storageListSend.clean();
 
+    // acceptStyle = 'path';
+    // acceptStyle = 'query';
+
     var item = storageListSend.toArray().pop();
     if (item) {
       var img = document.createElement('img');
@@ -107,8 +123,19 @@ function createStorage(trackerName) {
       };
       // accept = 'host/path/to.gif'
       // accept = 'host/path/to.gif?from=qq'
-      var accept = item.data.accept;
-      img.src = accept + (accept.indexOf('?') < 0 ? '?' : "&") + item.data.query;
+      var match = item.data.accept.match(/^([^?]+)(?:\?(.*))?$/);
+      var path = match[0];
+      var query = match[1];
+      var url;
+      if (item.data.acceptStyle === 'path') {
+        url = path + (/\/$/.test(path) ? '' : '/') + item.data.query.replace(/[&=]/g, '/') + (query ? '?' + query : '');
+      } else {
+        url = path + '?' + item.data.query + (query ? '&' + query : '');
+      }
+      img.src = url;
+
+      // var accept = item.data.accept;
+      // img.src = accept + (accept.indexOf('?') < 0 ? '?' : '&') + item.data.query;
       instance[item.id] = img;
     }
   }

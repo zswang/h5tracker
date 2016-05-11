@@ -50,6 +50,10 @@ describe("./src/index.js", function () {
 });
 describe("./src/inline.js", function () {
 });
+describe("./src/session-manager.js", function () {
+});
+describe("./src/storage-keys.js", function () {
+});
 describe("./src/storage-list.js", function () {
   it("createStorageList():storageInstance => sessionStorage", function () {
     var storageList = app.createStorageList('h5t_base1_log', sessionStorage);
@@ -162,6 +166,15 @@ describe("./src/storage.js", function () {
     print(data[0].data.query);
     assert.equal(printLines.join("\n"), "hisType=pageview"); printLines = [];
   });
+  it("send():acceptStyle", function () {
+    var storage = app.createStorage('h5t_scan2');
+    storage.send({
+      hisType: 'pageview'
+    }, '/host/path/to/t.gif', 'path');
+    var data = JSON.parse(localStorage.h5t_scan2_send);
+    print(data[0].data.acceptStyle);
+    assert.equal(printLines.join("\n"), "path"); printLines = [];
+  });
   it("scan():base", function () {
     var storage = app.createStorage('h5t_scan');
     storage.send({
@@ -222,7 +235,7 @@ describe("./src/tracker.js", function () {
       assert.equal(printLines.join("\n"), "1 2"); printLines = [];
     });
   });
-  it("send():case 1", function () {
+  it("send():field is null", function () {
     var tracker = app.createTracker('send_case_1');
     tracker.set({
       x: 1,
@@ -242,8 +255,13 @@ describe("./src/tracker.js", function () {
     print(data[1].data.query);
     assert.equal(printLines.join("\n"), "x=1&y=2"); printLines = [];
   });
+  it("send():field is null", function () {
+    var tracker = app.createTracker('send_case_2');
+    tracker.send({z: 3});
+    tracker.create({});
+  });
   it("log():case 1", function () {
-    var tracker = app.createTracker('send_case_1');
+    var tracker = app.createTracker('log_case_1');
     tracker.set({
       x: 1,
       y: 2
@@ -258,15 +276,20 @@ describe("./src/tracker.js", function () {
     tracker.warn('warn log.');
     tracker.fatal('fatal log.');
     tracker.create({
-      accept: '/host/case1',
-      data: {
-        z: 'z3'
-      }
     });
-    var data = JSON.parse(localStorage.send_case_1_send);
-    print(data[0].data.query);
-    assert.equal(printLines.join("\n"), "z=3&x=1&y=2"); printLines = [];
-    print(data[1].data.query);
-    assert.equal(printLines.join("\n"), "x=1&y=2"); printLines = [];
+    var data = JSON.parse(localStorage.log_case_1_log);
+    data.forEach(function (item) {
+      print(item.data.level, item.data.message);
+    });
+    assert.equal(printLines.join("\n"), "debug default log.\nwarn hello\ndebug debug log.\ninfo info log.\nwarn warn log.\nfatal fatal log."); printLines = [];
+  });
+  it("create():opts in undefined", function () {
+    var tracker = app.createTracker('create_case_1');
+    tracker.create();
+  });
+  it("create():duplicate create", function () {
+    var tracker = app.createTracker('create_case_2');
+    tracker.create({});
+    tracker.create({});
   });
 });

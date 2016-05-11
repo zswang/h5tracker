@@ -1,5 +1,6 @@
-/*<jdists encoding="fndep" import="./common.js" depend="newGuid">*/
+/*<jdists encoding="fndep" import="./common.js" depend="newGuid,format">*/
 var newGuid = require('./common').newGuid;
+var format = require('./common').format;
 /*</jdists>*/
 
 /*<jdists encoding="fndep" import="./event.js" depend="createEmitter">*/
@@ -10,8 +11,16 @@ var createEmitter = require('./event').createEmitter;
 var createTracker = require('./tracker').createTracker;
 /*</jdists>*/
 
+/*<jdists encoding="fndep" import="./storage-keys.js" depend="storageKeys">*/
+var storageKeys = require('./storage-keys').storageKeys;
+/*</jdists>*/
+
+/*<jdists encoding="fndep" import="./session-manager.js" depend="createSessionManager">*/
+var createSessionManager = require('./session-manager').createSessionManager;
+/*</jdists>*/
+
 /*=== 初始化 ===*/
-/*<function name="createApp" depend="createEmitter,createTracker,newGuid">*/
+/*<function name="createApp" depend="createEmitter,createTracker,newGuid,format,storageKeys,createSessionManager">*/
 /**
  * 追踪器实例
  *
@@ -29,7 +38,15 @@ var trackers = {};
 function createApp(appName) {
   console.log('createApp() appName: %s', appName);
 
+  var userId = localStorage[storageKeys.userId];
+  if (!userId) {
+    userId = localStorage[storageKeys.userId] = newGuid();
+  }
+
   var instance = createTracker('main');
+  instance.set({
+    user: userId
+  });
 
   instance.createEmitter = createEmitter;
   instance.createStorage = createStorage;
@@ -111,6 +128,9 @@ function createApp(appName) {
       var tracker = trackers[trackerName];
       if (!tracker) {
         tracker = trackers[trackerName] = createTracker(appName + '_' + trackerName);
+        tracker.set({
+          user: userId
+        });
       }
       if (typeof tracker[methodName] === 'function') {
         return tracker[methodName].apply(tracker, methodArgs);

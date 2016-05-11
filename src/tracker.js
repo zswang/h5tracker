@@ -135,7 +135,7 @@ function createTracker(name) {
    *
    * @param {Object} data 发送日志
    '''<example>'''
-   * @example send():case 1
+   * @example send():field is null
     ```js
     var tracker = app.createTracker('send_case_1');
     tracker.set({
@@ -159,6 +159,12 @@ function createTracker(name) {
     console.log(data[1].data.query);
     // > x=1&y=2
     ```
+   * @example send():field is null
+    ```js
+    var tracker = app.createTracker('send_case_2');
+    tracker.send({z: 3});
+    tracker.create({});
+    ```
    '''</example>'''
    */
   function send(data) {
@@ -167,6 +173,10 @@ function createTracker(name) {
         name: 'send',
         data: data
       });
+      return;
+    }
+    if (!options.accept) {
+      console.error('options.accept is undefined.');
       return;
     }
     // merge data
@@ -189,7 +199,7 @@ function createTracker(name) {
       }
     }
     instance.emit('send', item);
-    storage.send(item, options.accept);
+    storage.send(item, options.accept, options.acceptStyle);
   }
   instance.send = send;
   /**
@@ -199,7 +209,7 @@ function createTracker(name) {
    '''<example>'''
    * @example log():case 1
     ```js
-    var tracker = app.createTracker('send_case_1');
+    var tracker = app.createTracker('log_case_1');
     tracker.set({
       x: 1,
       y: 2
@@ -214,19 +224,19 @@ function createTracker(name) {
     tracker.warn('warn log.');
     tracker.fatal('fatal log.');
     tracker.create({
-      accept: '/host/case1',
-      data: {
-        z: 'z3'
-      }
     });
 
-    var data = JSON.parse(localStorage.send_case_1_send);
+    var data = JSON.parse(localStorage.log_case_1_log);
 
-    console.log(data[0].data.query);
-    // > z=3&x=1&y=2
-
-    console.log(data[1].data.query);
-    // > x=1&y=2
+    data.forEach(function (item) {
+      console.log(item.data.level, item.data.message);
+    });
+    // > debug default log.
+    // > warn hello
+    // > debug debug log.
+    // > info info log.
+    // > warn warn log.
+    // > fatal fatal log.
     ```
    '''</example>'''
    */
@@ -279,8 +289,20 @@ function createTracker(name) {
   // h5t('tracker.error', 'eraaesfads')
   /**
    * 创建
-   *
    * @param {Object} options 配置对象
+   '''<example>'''
+   * @example create():opts in undefined
+    ```js
+    var tracker = app.createTracker('create_case_1');
+    tracker.create();
+    ```
+   * @example create():duplicate create
+    ```js
+    var tracker = app.createTracker('create_case_2');
+    tracker.create({});
+    tracker.create({});
+    ```
+   '''</example>'''
    */
   function create(opts) {
     if (created) {

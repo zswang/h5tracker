@@ -6,7 +6,7 @@
    * @author
    *   zswang (http://weibo.com/zswang)
    *   meglad (https://github.com/meglad)
-   * @version 0.0.47
+   * @version 0.0.62
    * @date 2016-05-11
    */
   var objectName = window.h5tObjectName || 'h5t';
@@ -54,24 +54,6 @@
     return result;
   }
   /*</function>*/
-/*<function name="newGuid">*/
-/**
- * 比较大的概率上，生成唯一 ID
- *
- * @return {string} 返回生成的 ID
- *
- '''<example>'''
- * @example newGuid:base
-  ```js
-  console.log(/^[a-z0-9]+$/.test(app.newGuid()));
-  // > true
-  ```
- '''</example>'''
- */
-function newGuid() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
-}
-/*</function>*/
   /*<function name="createEmitter">*/
   /**
    * 创建事件对象
@@ -185,6 +167,122 @@ function newGuid() {
     }
     instance.emit = emit;
     return instance;
+  }
+  /*</function>*/
+/*<function name="newGuid">*/
+/**
+ * 比较大的概率上，生成唯一 ID
+ *
+ * @return {string} 返回生成的 ID
+ *
+ '''<example>'''
+ * @example newGuid:base
+  ```js
+  console.log(/^[a-z0-9]+$/.test(app.newGuid()));
+  // > true
+  ```
+ '''</example>'''
+ */
+var newGuid = (function() {
+  var guid = parseInt(Math.random() * 36);
+  return function newGuid() {
+    return Date.now().toString(36) + (guid++ % 36).toString(36) + Math.random().toString(36).slice(2, 4);
+  }
+})();
+/*</function>*/
+  /*<function name="createGetter" depend="camelCase">*/
+  /**
+   * 创建读取键值的方法
+   *
+   * @param {Object} target 目标对象
+   * @param {Function} getter 读取一个键值函数
+   *  getter -> function(name, fn)
+   '''<example>'''
+   * @example createGetter():base
+    ```js
+    var dict = { a: 1, b: 2, c: 3 };
+    var food = {};
+    food.get = jsets.createGetter(food, function(name) {
+        return dict[name];
+    });
+    console.log(JSON.stringify(food.get('a')));
+    // > 1
+    food.get('a', function(a) {
+      console.log(JSON.stringify(a));
+      // > 1
+    });
+    food.get(function(c, b, a) {
+      console.log(JSON.stringify([a, b, c]));
+      // > [1,2,3]
+    });
+    food.get(['a', 'b'], function(a, b) {
+        console.log(JSON.stringify(a));
+        // > 1
+        console.log(JSON.stringify(b));
+        // > 2
+    });
+    console.log(JSON.stringify(food.get(['a', 'b'])));
+    // > {"a":1,"b":2}
+    ```
+    '''</example>'''
+   */
+  function createGetter(target, getter, camel) {
+    var method = function (name, fn) {
+      var result;
+      var keys;
+      if (typeof name === 'function') {
+        keys = name['-jsets-params'];
+        if (!keys) { // 优先从缓存中获取
+          keys = [];
+          String(name).replace(/\(\s*([^()]+?)\s*\)/,
+            function (all, names) {
+              keys = names.split(/\s*,\s*/);
+            }
+          );
+          name['-jsets-params'] = keys;
+        }
+        return method(keys, name);
+      }
+      if (typeof name === 'string' || typeof name === 'number') {
+        name = camel ? camelCase(name) : name;
+        if (typeof fn === 'function') {
+          fn.call(target, getter(name));
+          return target;
+        }
+        return getter(name);
+      }
+      if (typeof name === 'object') {
+        if (name instanceof Array) {
+          if (typeof fn === 'function') {
+            result = [];
+            name.forEach(function (n) {
+              result.push(getter(camel ? camelCase(n) : n));
+            });
+            fn.apply(target, result);
+            return target;
+          }
+          result = {};
+          name.forEach(function (n) {
+            result[n] = getter(camel ? camelCase(n) : n);
+          });
+          return result;
+        }
+        var key;
+        if (typeof fn === 'function') {
+          result = [];
+          for (key in name) {
+            result.push(getter(camel ? camelCase(key) : key) || name[key]);
+          }
+          return target;
+        }
+        result = {};
+        for (key in name) {
+          result[key] = getter(camel ? camelCase(key) : key) || name[key];
+        }
+        return result;
+      }
+    };
+    return method;
   }
   /*</function>*/
 /*<function name="createStorageList" depend="newGuid">*/
@@ -442,150 +540,20 @@ function createStorageList(listName, storageInstance, storageExpires) {
   return instance;
 }
 /*</function>*/
-  /*<function name="createGetter" depend="camelCase">*/
-  /**
-   * 创建读取键值的方法
-   *
-   * @param {Object} target 目标对象
-   * @param {Function} getter 读取一个键值函数
-   *  getter -> function(name, fn)
-   '''<example>'''
-   * @example createGetter():base
-    ```js
-    var dict = { a: 1, b: 2, c: 3 };
-    var food = {};
-    food.get = jsets.createGetter(food, function(name) {
-        return dict[name];
-    });
-    console.log(JSON.stringify(food.get('a')));
-    // > 1
-    food.get('a', function(a) {
-      console.log(JSON.stringify(a));
-      // > 1
-    });
-    food.get(function(c, b, a) {
-      console.log(JSON.stringify([a, b, c]));
-      // > [1,2,3]
-    });
-    food.get(['a', 'b'], function(a, b) {
-        console.log(JSON.stringify(a));
-        // > 1
-        console.log(JSON.stringify(b));
-        // > 2
-    });
-    console.log(JSON.stringify(food.get(['a', 'b'])));
-    // > {"a":1,"b":2}
-    ```
-    '''</example>'''
-   */
-  function createGetter(target, getter, camel) {
-    var method = function (name, fn) {
-      var result;
-      var keys;
-      if (typeof name === 'function') {
-        keys = name['-jsets-params'];
-        if (!keys) { // 优先从缓存中获取
-          keys = [];
-          String(name).replace(/\(\s*([^()]+?)\s*\)/,
-            function (all, names) {
-              keys = names.split(/\s*,\s*/);
-            }
-          );
-          name['-jsets-params'] = keys;
-        }
-        return method(keys, name);
-      }
-      if (typeof name === 'string' || typeof name === 'number') {
-        name = camel ? camelCase(name) : name;
-        if (typeof fn === 'function') {
-          fn.call(target, getter(name));
-          return target;
-        }
-        return getter(name);
-      }
-      if (typeof name === 'object') {
-        if (name instanceof Array) {
-          if (typeof fn === 'function') {
-            result = [];
-            name.forEach(function (n) {
-              result.push(getter(camel ? camelCase(n) : n));
-            });
-            fn.apply(target, result);
-            return target;
-          }
-          result = {};
-          name.forEach(function (n) {
-            result[n] = getter(camel ? camelCase(n) : n);
-          });
-          return result;
-        }
-        var key;
-        if (typeof fn === 'function') {
-          result = [];
-          for (key in name) {
-            result.push(getter(camel ? camelCase(key) : key) || name[key]);
-          }
-          return target;
-        }
-        result = {};
-        for (key in name) {
-          result[key] = getter(camel ? camelCase(key) : key) || name[key];
-        }
-        return result;
-      }
-    };
-    return method;
-  }
-  /*</function>*/
-  /*<function name="createSetter" depend="camelCase">*/
-  /**
-   * 创建设置键值的方法
-   *
-   * @param {Object} target 目标对象
-   * @param {Function} setter 设置一个键值函数
-   *  setter -> function(name, value)
-   * @param {boolean} camel 键值是否需要驼峰化
-   '''<example>'''
-   * @example createSetter():base
-    ```js
-    var dict = {};
-    var food = {};
-    food.set = jsets.createSetter(food, function(name, value) {
-      dict[name] = value;
-    });
-    food.set('a', 1);
-    console.log(JSON.stringify(dict));
-    // > {"a":1}
-    food.set({
-      b: 2,
-      c: 3
-    });
-    console.log(JSON.stringify(dict));
-    // > {"a":1,"b":2,"c":3}
-    ```
-    '''</example>'''
-   */
-  function createSetter(target, setter, camel) {
-    return function (name, value) {
-      if (typeof name === 'string' || typeof name === 'number') {
-        setter(camel ? camelCase(name) : name, value);
-      }
-      else if (typeof name === 'object') {
-        if (name instanceof Array) {
-          name.forEach(function (n, i) {
-            setter(i, n);
-          });
-        }
-        else {
-          for (var key in name) {
-            setter(camel ? camelCase(key) : key, name[key]);
-          }
-        }
-      }
-      return target;
-    };
-  }
-  /*</function>*/
+/*<function name="storageKeys">*/
+var storageKeys = (function () {
+  var prefix = 'h5t@';
+  return {
+    userId: prefix + 'global/userId',
+    scanTime: prefix + 'global/scanTime',
+    sessionId: prefix + 'global/sessionId',
+    sessionBirthday: prefix + 'global/sessionBirthday',
+    sessionLiveTime: prefix + 'global/sessionLiveTime',
+    storageList: prefix + 'storageList/send/#{app}/#{tracker}',
+    storageListTS: prefix + 'storageList/send/ts/#{app}/#{tracker}',
+  };
+})();
+/*</function>*/
 /*<function name="createStorage" depend="createStorageList">*/
 /**
  * 创建存储器
@@ -642,12 +610,23 @@ function createStorage(trackerName) {
     console.log(data[0].data.query);
     // > hisType=pageview
     ```
+   * @example send():acceptStyle
+    ```js
+    var storage = app.createStorage('h5t_scan2');
+    storage.send({
+      hisType: 'pageview'
+    }, '/host/path/to/t.gif', 'path');
+    var data = JSON.parse(localStorage.h5t_scan2_send);
+    console.log(data[0].data.acceptStyle);
+    // > path
+    ```
    '''</example>'''
    */
-  function send(data, accept) {
+  function send(data, accept, acceptStyle) {
     var id = storageListSend.push({
       accept: accept,
-      query: queryFrom(data)
+      acceptStyle: acceptStyle, // 发送格式 "path" | "query"
+      query: queryFrom(data),
     });
     scan();
   }
@@ -668,6 +647,8 @@ function createStorage(trackerName) {
   function scan() {
     storageListLog.clean();
     storageListSend.clean();
+    // acceptStyle = 'path';
+    // acceptStyle = 'query';
     var item = storageListSend.toArray().pop();
     if (item) {
       var img = document.createElement('img');
@@ -680,8 +661,18 @@ function createStorage(trackerName) {
       };
       // accept = 'host/path/to.gif'
       // accept = 'host/path/to.gif?from=qq'
-      var accept = item.data.accept;
-      img.src = accept + (accept.indexOf('?') < 0 ? '?' : "&") + item.data.query;
+      var match = item.data.accept.match(/^([^?]+)(?:\?(.*))?$/);
+      var path = match[0];
+      var query = match[1];
+      var url;
+      if (item.data.acceptStyle === 'path') {
+        url = path + (/\/$/.test(path) ? '' : '/') + item.data.query.replace(/[&=]/g, '/') + (query ? '?' + query : '');
+      } else {
+        url = path + '?' + item.data.query + (query ? '&' + query : '');
+      }
+      img.src = url;
+      // var accept = item.data.accept;
+      // img.src = accept + (accept.indexOf('?') < 0 ? '?' : '&') + item.data.query;
       instance[item.id] = img;
     }
   }
@@ -689,6 +680,55 @@ function createStorage(trackerName) {
   return instance;
 }
 /*</function>*/
+  /*<function name="createSetter" depend="camelCase">*/
+  /**
+   * 创建设置键值的方法
+   *
+   * @param {Object} target 目标对象
+   * @param {Function} setter 设置一个键值函数
+   *  setter -> function(name, value)
+   * @param {boolean} camel 键值是否需要驼峰化
+   '''<example>'''
+   * @example createSetter():base
+    ```js
+    var dict = {};
+    var food = {};
+    food.set = jsets.createSetter(food, function(name, value) {
+      dict[name] = value;
+    });
+    food.set('a', 1);
+    console.log(JSON.stringify(dict));
+    // > {"a":1}
+    food.set({
+      b: 2,
+      c: 3
+    });
+    console.log(JSON.stringify(dict));
+    // > {"a":1,"b":2,"c":3}
+    ```
+    '''</example>'''
+   */
+  function createSetter(target, setter, camel) {
+    return function (name, value) {
+      if (typeof name === 'string' || typeof name === 'number') {
+        setter(camel ? camelCase(name) : name, value);
+      }
+      else if (typeof name === 'object') {
+        if (name instanceof Array) {
+          name.forEach(function (n, i) {
+            setter(i, n);
+          });
+        }
+        else {
+          for (var key in name) {
+            setter(camel ? camelCase(key) : key, name[key]);
+          }
+        }
+      }
+      return target;
+    };
+  }
+  /*</function>*/
 /*<function name="createTracker" depend="createEmitter,createGetter,createSetter,createStorage">*/
 /**
  * 创建追踪器
@@ -800,7 +840,7 @@ function createTracker(name) {
    *
    * @param {Object} data 发送日志
    '''<example>'''
-   * @example send():case 1
+   * @example send():field is null
     ```js
     var tracker = app.createTracker('send_case_1');
     tracker.set({
@@ -821,6 +861,12 @@ function createTracker(name) {
     console.log(data[1].data.query);
     // > x=1&y=2
     ```
+   * @example send():field is null
+    ```js
+    var tracker = app.createTracker('send_case_2');
+    tracker.send({z: 3});
+    tracker.create({});
+    ```
    '''</example>'''
    */
   function send(data) {
@@ -829,6 +875,10 @@ function createTracker(name) {
         name: 'send',
         data: data
       });
+      return;
+    }
+    if (!options.accept) {
+      console.error('options.accept is undefined.');
       return;
     }
     // merge data
@@ -851,7 +901,7 @@ function createTracker(name) {
       }
     }
     instance.emit('send', item);
-    storage.send(item, options.accept);
+    storage.send(item, options.accept, options.acceptStyle);
   }
   instance.send = send;
   /**
@@ -861,7 +911,7 @@ function createTracker(name) {
    '''<example>'''
    * @example log():case 1
     ```js
-    var tracker = app.createTracker('send_case_1');
+    var tracker = app.createTracker('log_case_1');
     tracker.set({
       x: 1,
       y: 2
@@ -876,16 +926,17 @@ function createTracker(name) {
     tracker.warn('warn log.');
     tracker.fatal('fatal log.');
     tracker.create({
-      accept: '/host/case1',
-      data: {
-        z: 'z3'
-      }
     });
-    var data = JSON.parse(localStorage.send_case_1_send);
-    console.log(data[0].data.query);
-    // > z=3&x=1&y=2
-    console.log(data[1].data.query);
-    // > x=1&y=2
+    var data = JSON.parse(localStorage.log_case_1_log);
+    data.forEach(function (item) {
+      console.log(item.data.level, item.data.message);
+    });
+    // > debug default log.
+    // > warn hello
+    // > debug debug log.
+    // > info info log.
+    // > warn warn log.
+    // > fatal fatal log.
     ```
    '''</example>'''
    */
@@ -932,8 +983,20 @@ function createTracker(name) {
   // h5t('tracker.error', 'eraaesfads')
   /**
    * 创建
-   *
    * @param {Object} options 配置对象
+   '''<example>'''
+   * @example create():opts in undefined
+    ```js
+    var tracker = app.createTracker('create_case_1');
+    tracker.create();
+    ```
+   * @example create():duplicate create
+    ```js
+    var tracker = app.createTracker('create_case_2');
+    tracker.create({});
+    tracker.create({});
+    ```
+   '''</example>'''
    */
   function create(opts) {
     if (created) {
@@ -955,7 +1018,86 @@ function createTracker(name) {
   return instance;
 }
 /*</function>*/
-/*<function name="createApp" depend="createEmitter,createTracker,newGuid">*/
+/*<function name="format">*/
+function format(template, json) {
+  return template.replace(/#\{(.*?)\}/g, function(all, key) {
+    return json && (key in json) ? json[key] : "";
+  });
+}
+/*</function>*/
+/*<function name="createSessionManager" depend="storageKeys,createEmitter,createGetter">*/
+/**
+ * 创建 Session 管理器
+ *
+ * @param {Number} sessionExpires 过期时间 30 秒
+ * @return {Object} 返回管理器会话实例
+ */
+function createSessionManager(sessionExpires) {
+  sessionExpires = sessionExpires || 30;
+  var instance = createEmitter();
+  var fieldsKey = {
+    id: storageKeys.sessionId,
+    birthday: storageKeys.sessionBirthday,
+    liveTime: storageKeys.sessionLiveTime,
+  };
+  instance.get = createGetter(instance, function (name) {
+    return sessionStorage[fieldsKey[name]];
+  }, true);
+  /**
+   * 创建 Session
+   */
+  function createSession() {
+    if (sessionStorage[storageKeys.sessionId]) {
+      instance.emit('destroySession');
+    }
+    var now = Date.now();
+    sessionStorage[storageKeys.sessionId] = newGuid();
+    sessionStorage[storageKeys.sessionBirthday] = now;
+    sessionStorage[storageKeys.sessionLiveTime] = now;
+    instance.emit('createSession');
+  }
+  instance.createSession = createSession;
+  /**
+   * 创建 Session
+   */
+  function destroySession() {
+    if (sessionStorage[storageKeys.sessionId]) {
+      delete sessionStorage[storageKeys.sessionId];
+      delete sessionStorage[storageKeys.sessionBirthday];
+      delete sessionStorage[storageKeys.sessionLiveTime];
+      instance.emit('destroySession');
+    }
+  }
+  instance.createSession = createSession;
+  if (!sessionStorage[storageKeys.sessionId]) {
+    createSession();
+  }
+  var timer;
+  function inputHandler() {
+    if (timer) {
+      return;
+    }
+    var now = Date.now();
+    timer = setTimeout(function() {
+      if (Date.now() - sessionStorage[storageKeys.liveTime] >= sessionExpires) {
+        createSession();
+      } else {
+        sessionStorage[storageKeys.sessionLiveTime] = liveTime;
+      }
+      timer = null;
+    }, 1000);
+  }
+  [
+    'keydown', 'input', 'keyup',
+    'click', 'contextmenu', 'mousemove',
+    'touchstart', 'touchend', 'touchmove'
+  ].forEach(function(name) {
+    document.addEventListener(name, inputHandler, false);
+  });
+  return instance;
+}
+/*</function>*/
+/*<function name="createApp" depend="createEmitter,createTracker,newGuid,format,storageKeys,createSessionManager">*/
 /**
  * 追踪器实例
  *
@@ -971,7 +1113,14 @@ var trackers = {};
  */
 function createApp(appName) {
   console.log('createApp() appName: %s', appName);
+  var userId = localStorage[storageKeys.userId];
+  if (!userId) {
+    userId = localStorage[storageKeys.userId] = newGuid();
+  }
   var instance = createTracker('main');
+  instance.set({
+    user: userId
+  });
   instance.createEmitter = createEmitter;
   instance.createStorage = createStorage;
   instance.createStorageList = createStorageList;
@@ -1039,6 +1188,9 @@ function createApp(appName) {
       var tracker = trackers[trackerName];
       if (!tracker) {
         tracker = trackers[trackerName] = createTracker(appName + '_' + trackerName);
+        tracker.set({
+          user: userId
+        });
       }
       if (typeof tracker[methodName] === 'function') {
         return tracker[methodName].apply(tracker, methodArgs);

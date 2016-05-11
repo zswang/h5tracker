@@ -179,7 +179,7 @@ describe("./src/tracker.js", function () {
   });
   tracker.on('log', function (data) {
     print(count++);
-    assert.equal(printLines.join("\n"), "0"); printLines = [];
+    assert.equal(printLines.join("\n"), "1"); printLines = [];
     print(data.level);
     assert.equal(printLines.join("\n"), "error"); printLines = [];
     print(data.message);
@@ -202,7 +202,7 @@ describe("./src/tracker.js", function () {
       },
       log: function (data) {
         print(count++);
-        assert.equal(printLines.join("\n"), "1"); printLines = [];
+        assert.equal(printLines.join("\n"), "0"); printLines = [];
         print(data.level);
         assert.equal(printLines.join("\n"), "error"); printLines = [];
         print(data.message);
@@ -230,6 +230,33 @@ describe("./src/tracker.js", function () {
     });
     tracker.send({z: 3});
     tracker.send({z: null});
+    tracker.create({
+      accept: '/host/case1',
+      data: {
+        z: 'z3'
+      }
+    });
+    var data = JSON.parse(localStorage.send_case_1_send);
+    print(data[0].data.query);
+    assert.equal(printLines.join("\n"), "z=3&x=1&y=2"); printLines = [];
+    print(data[1].data.query);
+    assert.equal(printLines.join("\n"), "x=1&y=2"); printLines = [];
+  });
+  it("log():case 1", function () {
+    var tracker = app.createTracker('send_case_1');
+    tracker.set({
+      x: 1,
+      y: 2
+    });
+    tracker.log('default log.');
+    tracker.log({
+      'level': 'warn',
+      'message': 'hello'
+    });
+    tracker.debug('debug log.');
+    tracker.info('info log.');
+    tracker.warn('warn log.');
+    tracker.fatal('fatal log.');
     tracker.create({
       accept: '/host/case1',
       data: {

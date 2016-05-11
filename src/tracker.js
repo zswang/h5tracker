@@ -28,7 +28,7 @@ var createStorage = require('./storage').createStorage;
   });
   tracker.on('log', function (data) {
     console.log(count++);
-    // > 0
+    // > 1
 
     console.log(data.level);
     // > error
@@ -55,7 +55,7 @@ var createStorage = require('./storage').createStorage;
       },
       log: function (data) {
         console.log(count++);
-        // > 1
+        // > 0
 
         console.log(data.level);
         // > error
@@ -182,6 +182,12 @@ function createTracker(name) {
     Object.keys(data).forEach(function (key) {
       item[key] = data[key];
     });
+    if (options.event) {
+      var fn = options.event['send'];
+      if (typeof fn === 'function') {
+        fn.call(instance, item);
+      }
+    }
     instance.emit('send', item);
     storage.send(item, options.accept);
   }
@@ -190,6 +196,39 @@ function createTracker(name) {
    * 打印日志
    *
    * @param {Object|String} data 日志参数
+   '''<example>'''
+   * @example log():case 1
+    ```js
+    var tracker = app.createTracker('send_case_1');
+    tracker.set({
+      x: 1,
+      y: 2
+    });
+    tracker.log('default log.');
+    tracker.log({
+      'level': 'warn',
+      'message': 'hello'
+    });
+    tracker.debug('debug log.');
+    tracker.info('info log.');
+    tracker.warn('warn log.');
+    tracker.fatal('fatal log.');
+    tracker.create({
+      accept: '/host/case1',
+      data: {
+        z: 'z3'
+      }
+    });
+
+    var data = JSON.parse(localStorage.send_case_1_send);
+
+    console.log(data[0].data.query);
+    // > z=3&x=1&y=2
+
+    console.log(data[1].data.query);
+    // > x=1&y=2
+    ```
+   '''</example>'''
    */
   function log(data) {
     if (!created) {
@@ -209,11 +248,22 @@ function createTracker(name) {
       console.error('log level is undefined.');
       return;
     }
-    instance.emit('log', data);
+
+    var item = {};
+    Object.keys(data).forEach(function (key) {
+      item[key] = data[key];
+    });
+    if (options.event) {
+      var fn = options.event['log'];
+      if (typeof fn === 'function') {
+        fn.call(instance, item);
+      }
+    }
+    instance.emit('log', item);
     /*<debug>*/
     // console[data.level].call(console, data.message);
     /*</debug>*/
-    storage.log(data);
+    storage.log(item);
   }
   instance.log = log;
 
@@ -234,21 +284,15 @@ function createTracker(name) {
    */
   function create(opts) {
     if (created) {
-      console.error('h5tracker: is repeat created');
+      console.error('Cannot duplicate create tracker.');
+      return;
+    }
+    if (!opts) {
+      console.error('Parameter "opts" cannot be empty.');
       return;
     }
     created = true;
-    options = opts || {};
-
-    // 绑定事件
-    if (opts.event) {
-      Object.keys(opts.event).forEach(function (key) {
-        var fn = opts.event[key];
-        if (typeof fn === 'function') {
-          instance.on(key, fn);
-        }
-      });
-    }
+    options = opts;
 
     actionList.forEach(function (item) {
       instance[item.name](item.data);

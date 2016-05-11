@@ -14,7 +14,7 @@
 </head>
 
 <body>
-  <button cmd="log">hello 11111111</button>
+  <button cmd="log">hello 11111111</button> <button cmd="log">hello 2222222</button>
 </body>
 <script>
 h5t('speed.on', 'log', function(data) {
@@ -25,6 +25,27 @@ h5t('speed.on', 'send', function(data) {
   delete data.dm;
   console.log('speed.on send data: %s', JSON.stringify(data));
 });
+
+var timer = setTimeout(function() {
+  h5t('speed.create', {
+    accept: 'http://192.168.100.41:3000/t.gif', // 日志接收地址
+    data: { // 基准数据，即：每次上报都带上
+      dm: document.location.origin,
+      lo: document.location.pathname
+    },
+    event: { // 事件
+      createSession: function() { // session 被创建
+
+      },
+      send: function(data) { // 发送日志
+        data.logType = 'click';
+      },
+      log: function(data) { // 记录日志
+
+      },
+    }
+  });
+}, 2000);
 
 function doAction(cmd, element) {
   switch (cmd) {
@@ -41,30 +62,7 @@ function doAction(cmd, element) {
   }
 }
 
-var timer;
 document.addEventListener('click', function(e) {
-  if (!timer) {
-    var timer = setTimeout(function() {
-      h5t('speed.create', {
-        accept: 'http://192.168.100.41', // 日志接收地址
-        data: { // 基准数据，即：每次上报都带上
-          dm: document.location.origin,
-          lo: document.location.pathname
-        },
-        event: { // 事件
-          createSession: function() { // session 被创建
-
-          },
-          send: function(data) { // 发送日志
-            data.callback = 'send';
-          },
-          log: function(data) { // 记录日志
-            data.callback = 'log';
-          },
-        }
-      });
-    }, 2000);
-  }
   var target = e.target;
   while (target) {
     var cmd = target.getAttribute && target.getAttribute('cmd');

@@ -57,6 +57,14 @@ function createApp(appName) {
 
   trackers[instance.name] = instance;
 
+  var sessionManager = createSessionManager();
+  sessionManager.on('createSession', function () {
+    instance.emit('createSession');
+  });
+  sessionManager.on('destroySession', function() {
+    instance.emit('destroySession');
+  });
+
   /*=== 生命周期 ===*/
 
   /**

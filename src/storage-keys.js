@@ -9,8 +9,8 @@ var storageKeys = (function () {
     sessionBirthday: prefix + 'global/sessionBirthday',
     sessionLiveTime: prefix + 'global/sessionLiveTime',
 
-    storageList: prefix + 'storageList/send/#{app}/#{tracker}',
-    storageListTS: prefix + 'storageList/send/ts/#{app}/#{tracker}',
+    storageList: prefix + 'storageList/#{name}/#{app}/#{tracker}',
+    storageListTS: prefix + 'storageList/#{name}/ts/#{app}/#{tracker}',
   };
 })();
 /*</function>*/

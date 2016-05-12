@@ -34,7 +34,17 @@ var trackers = {};
  * @param {string} appName 应用名
  * @param {Object} argv 配置项
  * @return {Object} 返回应用追踪器实例
- */
+ '''<example>'''
+ * @example test done
+ ```js
+  setTimeout(function() {
+    console.log('hello');
+    // > hello
+    //done();
+  }, 1000);
+ ```
+ '''</example>'''
+  */
 function createApp(appName) {
   console.log('createApp() appName: %s', appName);
 
@@ -54,6 +64,7 @@ function createApp(appName) {
   instance.createTracker = createTracker;
   instance.newGuid = newGuid;
   instance.createApp = createApp;
+  instance.createSessionManager = createSessionManager;
 
   trackers[instance.name] = instance;
 

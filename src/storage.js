@@ -6,15 +6,16 @@ var createStorageList = require('./storage-list').createStorageList;
 /**
  * 创建存储器
  *
- * @param {Object} argv 配置项
+ * @param {string} appName 应用名
+ * @param {string} trackerName 追踪器名
  * @return {Object} 返回存储器
  */
-function createStorage(trackerName) {
+function createStorage(appName, trackerName) {
 
   var instance = {};
 
-  var storageListSend = createStorageList(trackerName + '_send');
-  var storageListLog = createStorageList(trackerName + '_log');
+  var storageListSend = createStorageList(appName, trackerName, 'send');
+  var storageListLog = createStorageList(appName, trackerName, 'log');
 
   /**
    * 记录日志

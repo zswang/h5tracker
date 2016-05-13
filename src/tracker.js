@@ -68,16 +68,16 @@ var createStorage = require('./storage').createStorage;
   ```
  '''</example>'''
  */
-function createTracker(name) {
+function createTracker(appName, trackerName) {
   /**
    * 追踪器实例
    *
    * @type {Object}
    */
   var instance = createEmitter();
-  instance.name = name;
+  instance.name = trackerName;
 
-  var storage = createStorage(name);
+  var storage = createStorage(appName, trackerName);
 
   /**
    * 是否被创建过

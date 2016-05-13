@@ -2,10 +2,16 @@
 var newGuid = require('./common').newGuid;
 /*</jdists>*/
 
+/*<jdists encoding="fndep" import="./storage-keys.js" depend="storageKeys">*/
+var storageKeys = require('./storage-keys').storageKeys;
+/*</jdists>*/
+
 /*<function name="createStorageList" depend="newGuid">*/
 /**
  * 创建存储列表
  *
+ * @param {string} appName 应用名
+ * @param {string} trackerName 追踪器名
  * @param {string} listName 列表名称
  * @param {Object} storageInstance 存储实例 localStorage | sessionStorage
  * @return {Object} 返回存储列表对象
@@ -34,7 +40,7 @@ var newGuid = require('./common').newGuid;
     ```
    '''</example>'''
  */
-function createStorageList(listName, storageInstance, storageExpires) {
+function createStorageList(appName, trackerName, listName, storageInstance, storageExpires) {
   // 参数默认值
   storageInstance = storageInstance || localStorage;
   storageExpires = storageExpires || 864000; // 10 * 24 * 60 * 60

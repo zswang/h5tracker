@@ -53,6 +53,7 @@ function createApp(appName) {
   instance.createStorageList = createStorageList;
   instance.createTracker = createTracker;
   instance.newGuid = newGuid;
+  instance.storageKeys = storageKeys;
   instance.createApp = createApp;
 
   trackers[instance.name] = instance;
@@ -135,7 +136,7 @@ function createApp(appName) {
     } else {
       var tracker = trackers[trackerName];
       if (!tracker) {
-        tracker = trackers[trackerName] = createTracker(appName + '_' + trackerName);
+        tracker = trackers[trackerName] = createTracker(appName, trackerName);
         tracker.set({
           user: userId
         });

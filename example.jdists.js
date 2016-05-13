@@ -23,6 +23,8 @@ function print() {
 /*<jdists encoding="jhtmls,regex" pattern="/~/g" replacement="--" data="#files" export="#example">*/
 forEach(function (item) {
 !#{'describe("' + item + '", function () {'}
+!#{'  this.timeout(5000);'}
+!#{'  printLines = [];'}
   <!~jdists import="#{item}?example*" /~>
 !#{'});'}
 });
@@ -30,18 +32,23 @@ forEach(function (item) {
 
 /*<jdists export="#replacer">*/
 function (content) {
-  content = content.replace(/^\s*\*\s*@example\s*(.*)$/mg, function (all, desc) {
-    return '  it(' + JSON.stringify(desc) + ', function () {';
-  });
-  content = content.replace(/^\s*```js\s*$/mg, '');
-  content = content.replace(/^(\s*\/\/ > .*\n??)+/mg, function (all) {
-    var space = all.match(/^(\s*)\/\/ > /)[1];
-    var output = all.replace(/^\s*\/\/ > /mg, '');
-    return space + 'assert.equal(printLines.join("\\n"), ' + JSON.stringify(output) + '); printLines = [];'
-  });
-  content = content.replace(/console\.log/g, 'print');
-  content = content.replace(/^\s*```\s*$/mg,
-    '  });');
+  return content.replace(/\s*\*(\s*)@example\s+(.*)\n\s*```js([^]*?)```/g,
+    function (all, space, desc, code) {
+      var hasDone = code.indexOf('//done();') >= 0;
+      var result = space + 'it(' + JSON.stringify(desc) + ', function(' + (hasDone ? 'done': '') + ') {\n';
+      result += space + 'printLines = [];';
+      result += code.replace(/^(\s*\/\/ > .*\n??)+/mg, function (all) {
+        var space = all.match(/^(\s*)\/\/ > /)[1];
+        var output = all.replace(/^\s*\/\/ > /mg, '');
+        return space + 'assert.equal(printLines.join("\\n"), ' + JSON.stringify(output) + '); printLines = [];'
+      })
+      .replace(/console\.log/g, 'print')
+      .replace('//done();', 'done();');
+
+      result += '});\n';
+      return result;
+    }
+  );
   return content;
 }
 /*</jdists>*/

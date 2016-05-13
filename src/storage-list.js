@@ -1,12 +1,13 @@
-/*<jdists encoding="fndep" import="./common.js" depend="newGuid">*/
+/*<jdists encoding="fndep" import="./common.js" depend="newGuid,format">*/
 var newGuid = require('./common').newGuid;
+var format = require('./common').format;
 /*</jdists>*/
 
 /*<jdists encoding="fndep" import="./storage-keys.js" depend="storageKeys">*/
 var storageKeys = require('./storage-keys').storageKeys;
 /*</jdists>*/
 
-/*<function name="createStorageList" depend="newGuid">*/
+/*<function name="createStorageList" depend="newGuid,format,storageKeys">*/
 /**
  * 创建存储列表
  *
@@ -18,23 +19,23 @@ var storageKeys = require('./storage-keys').storageKeys;
    '''<example>'''
    * @example createStorageList():storageInstance => sessionStorage
     ```js
-    var storageList = app.createStorageList('h5t_base1_log', sessionStorage);
+    var storageList = app.createStorageList('h5t', 'base1', 'log', sessionStorage);
     storageList.push({
       level: 'info',
       message: 'click button1'
     });
-    var data = JSON.parse(sessionStorage.h5t_base1_log);
+    var data = JSON.parse(sessionStorage['h5t@storageList/h5t/base1/log']);
     console.log(data.length);
     // > 1
     ```
    * @example createStorageList():storageExpires => 10000
     ```js
-    var storageList = app.createStorageList('h5t_base2_log', localStorage, 10000);
+    var storageList = app.createStorageList('h5t', 'base2', 'log', localStorage, 10000);
     storageList.push({
       level: 'info',
       message: 'click button1'
     });
-    var data = JSON.parse(localStorage.h5t_base2_log);
+    var data = JSON.parse(localStorage['h5t@storageList/h5t/base2/log']);
     console.log(data[0].expires);
     // > 10000
     ```
@@ -46,11 +47,16 @@ function createStorageList(appName, trackerName, listName, storageInstance, stor
   storageExpires = storageExpires || 864000; // 10 * 24 * 60 * 60
 
   var instance = {};
-
+  var scope = {
+    name: listName,
+    app: appName,
+    tracker: trackerName,
+  };
   /**
    * 时间戳字段名
    */
-  var timestampKey = listName + '_ts';
+  var storageListTSKey = format(storageKeys.storageListTS, scope);
+  var storageListKey = format(storageKeys.storageList, scope);
 
   /**
    * 记录列表
@@ -75,12 +81,12 @@ function createStorageList(appName, trackerName, listName, storageInstance, stor
    * 加载列表
    */
   function load() {
-    if (storageInstance[timestampKey] !== timestamp) {
+    if (storageInstance[storageListTSKey] !== timestamp) {
       list = null;
     }
     if (!list) {
       try {
-        list = JSON.parse(storageInstance[listName] || '[]');
+        list = JSON.parse(storageInstance[storageListKey] || '[]');
       } catch(ex) {
         list = [];
       }
@@ -91,8 +97,8 @@ function createStorageList(appName, trackerName, listName, storageInstance, stor
    * 保存列表
    */
   function save() {
-    storageInstance[timestampKey] = newGuid();
-    storageInstance[listName] = JSON.stringify(list);
+    storageInstance[storageListTSKey] = newGuid();
+    storageInstance[storageListKey] = JSON.stringify(list);
   }
 
   /**
@@ -103,7 +109,7 @@ function createStorageList(appName, trackerName, listName, storageInstance, stor
    '''<example>'''
    * @example push():base
     ```js
-    var storageList = app.createStorageList('h5t_push_log');
+    var storageList = app.createStorageList('h5t', 'push', 'log');
     storageList.push({
       level: 'info',
       message: 'click button1'
@@ -112,7 +118,7 @@ function createStorageList(appName, trackerName, listName, storageInstance, stor
       level: 'info',
       message: 'click button2'
     });
-    var data = JSON.parse(localStorage.h5t_push_log);
+    var data = JSON.parse(localStorage['h5t@storageList/h5t/push/log']);
     console.log(data.length);
     // > 2
     console.log(data[0].data.message);
@@ -140,13 +146,13 @@ function createStorageList(appName, trackerName, listName, storageInstance, stor
   instance.push = push;
 
   /**
-   * 去列表的最后一个元素
+   * 列表数组
    *
    * @return {Object} 返回最后一个元素，如果列表为空则返回 undefined
    '''<example>'''
    * @example toArray():base
     ```js
-    var storageList = app.createStorageList('h5t_pop_log');
+    var storageList = app.createStorageList('h5t', 'toArray', 'log');
     storageList.push({
       level: 'info',
       message: 'click button1'
@@ -155,7 +161,7 @@ function createStorageList(appName, trackerName, listName, storageInstance, stor
       level: 'info',
       message: 'click button2'
     });
-    var data = JSON.parse(localStorage.h5t_pop_log);
+    var data = JSON.parse(localStorage['h5t@storageList/h5t/toArray/log']);
     var items = storageList.toArray();
     console.log(items.pop().data.message);
     // > click button2
@@ -177,7 +183,7 @@ function createStorageList(appName, trackerName, listName, storageInstance, stor
    '''<example>'''
    * @example clean():base
     ```js
-    var storageList = app.createStorageList('h5t_clean_log');
+    var storageList = app.createStorageList('h5t', 'clean', 'log');
     storageList.push({
       level: 'info',
       message: 'click button1'
@@ -191,12 +197,12 @@ function createStorageList(appName, trackerName, listName, storageInstance, stor
       message: 'click button3'
     });
 
-    var data = JSON.parse(localStorage.h5t_clean_log);
+    var data = JSON.parse(localStorage['h5t@storageList/h5t/clean/log']);
     data[1].birthday = 0;
-    localStorage.h5t_clean_log = JSON.stringify(data);
+    localStorage['h5t@storageList/h5t/clean/log'] = JSON.stringify(data);
 
     storageList.clean();
-    data = JSON.parse(localStorage.h5t_clean_log);
+    data = JSON.parse(localStorage['h5t@storageList/h5t/clean/log']);
     console.log(data.length);
     // > 2
     console.log(data[0].data.message);
@@ -247,7 +253,7 @@ function createStorageList(appName, trackerName, listName, storageInstance, stor
    '''<example>'''
    * @example remove():base
     ```js
-    var storageList = app.createStorageList('h5t_remove_log');
+    var storageList = app.createStorageList('h5t', 'remove', 'log');
     var id1 = storageList.push({
       level: 'info',
       message: 'click button1'
@@ -257,7 +263,7 @@ function createStorageList(appName, trackerName, listName, storageInstance, stor
       message: 'click button2'
     });
     storageList.remove(id1);
-    var data = JSON.parse(localStorage.h5t_remove_log);
+    var data = JSON.parse(localStorage['h5t@storageList/h5t/remove/log']);
     console.log(data.length);
     // > 1
     console.log(data[0].id === id2);

@@ -6,8 +6,8 @@
    * @author
    *   zswang (http://weibo.com/zswang)
    *   meglad (https://github.com/meglad)
-   * @version 0.0.62
-   * @date 2016-05-11
+   * @version 0.0.68
+   * @date 2016-05-13
    */
   var objectName = window.h5tObjectName || 'h5t';
   var oldObject = window[objectName];
@@ -54,6 +54,20 @@
     return result;
   }
   /*</function>*/
+/*<function name="storageKeys">*/
+var storageKeys = (function () {
+  var prefix = 'h5t@';
+  return {
+    userId: prefix + 'global/userId',
+    scanTime: prefix + 'global/scanTime',
+    sessionId: prefix + 'global/sessionId',
+    sessionBirthday: prefix + 'global/sessionBirthday',
+    sessionLiveTime: prefix + 'global/sessionLiveTime',
+    storageList: prefix + 'storageList/#{app}/#{tracker}/#{name}',
+    storageListTS: prefix + 'storageList/#{app}/#{tracker}/#{name}/ts',
+  };
+})();
+/*</function>*/
   /*<function name="createEmitter">*/
   /**
    * 创建事件对象
@@ -190,6 +204,13 @@ var newGuid = (function() {
   }
 })();
 /*</function>*/
+/*<function name="format">*/
+function format(template, json) {
+  return template.replace(/#\{(.*?)\}/g, function(all, key) {
+    return json && (key in json) ? json[key] : "";
+  });
+}
+/*</function>*/
   /*<function name="createGetter" depend="camelCase">*/
   /**
    * 创建读取键值的方法
@@ -285,47 +306,55 @@ var newGuid = (function() {
     return method;
   }
   /*</function>*/
-/*<function name="createStorageList" depend="newGuid">*/
+/*<function name="createStorageList" depend="newGuid,format,storageKeys">*/
 /**
  * 创建存储列表
  *
+ * @param {string} appName 应用名
+ * @param {string} trackerName 追踪器名
  * @param {string} listName 列表名称
  * @param {Object} storageInstance 存储实例 localStorage | sessionStorage
  * @return {Object} 返回存储列表对象
    '''<example>'''
    * @example createStorageList():storageInstance => sessionStorage
     ```js
-    var storageList = app.createStorageList('h5t_base1_log', sessionStorage);
+    var storageList = app.createStorageList('h5t', 'base1', 'log', sessionStorage);
     storageList.push({
       level: 'info',
       message: 'click button1'
     });
-    var data = JSON.parse(sessionStorage.h5t_base1_log);
+    var data = JSON.parse(sessionStorage['h5t@storageList/h5t/base1/log']);
     console.log(data.length);
     // > 1
     ```
    * @example createStorageList():storageExpires => 10000
     ```js
-    var storageList = app.createStorageList('h5t_base2_log', localStorage, 10000);
+    var storageList = app.createStorageList('h5t', 'base2', 'log', localStorage, 10000);
     storageList.push({
       level: 'info',
       message: 'click button1'
     });
-    var data = JSON.parse(localStorage.h5t_base2_log);
+    var data = JSON.parse(localStorage['h5t@storageList/h5t/base2/log']);
     console.log(data[0].expires);
     // > 10000
     ```
    '''</example>'''
  */
-function createStorageList(listName, storageInstance, storageExpires) {
+function createStorageList(appName, trackerName, listName, storageInstance, storageExpires) {
   // 参数默认值
   storageInstance = storageInstance || localStorage;
   storageExpires = storageExpires || 864000; // 10 * 24 * 60 * 60
   var instance = {};
+  var scope = {
+    name: listName,
+    app: appName,
+    tracker: trackerName,
+  };
   /**
    * 时间戳字段名
    */
-  var timestampKey = listName + '_ts';
+  var storageListTSKey = format(storageKeys.storageListTS, scope);
+  var storageListKey = format(storageKeys.storageList, scope);
   /**
    * 记录列表
    */
@@ -346,12 +375,12 @@ function createStorageList(listName, storageInstance, storageExpires) {
    * 加载列表
    */
   function load() {
-    if (storageInstance[timestampKey] !== timestamp) {
+    if (storageInstance[storageListTSKey] !== timestamp) {
       list = null;
     }
     if (!list) {
       try {
-        list = JSON.parse(storageInstance[listName] || '[]');
+        list = JSON.parse(storageInstance[storageListKey] || '[]');
       } catch(ex) {
         list = [];
       }
@@ -361,8 +390,8 @@ function createStorageList(listName, storageInstance, storageExpires) {
    * 保存列表
    */
   function save() {
-    storageInstance[timestampKey] = newGuid();
-    storageInstance[listName] = JSON.stringify(list);
+    storageInstance[storageListTSKey] = newGuid();
+    storageInstance[storageListKey] = JSON.stringify(list);
   }
   /**
    * 追加数据到列表中
@@ -372,7 +401,7 @@ function createStorageList(listName, storageInstance, storageExpires) {
    '''<example>'''
    * @example push():base
     ```js
-    var storageList = app.createStorageList('h5t_push_log');
+    var storageList = app.createStorageList('h5t', 'push', 'log');
     storageList.push({
       level: 'info',
       message: 'click button1'
@@ -381,7 +410,7 @@ function createStorageList(listName, storageInstance, storageExpires) {
       level: 'info',
       message: 'click button2'
     });
-    var data = JSON.parse(localStorage.h5t_push_log);
+    var data = JSON.parse(localStorage['h5t@storageList/h5t/push/log']);
     console.log(data.length);
     // > 2
     console.log(data[0].data.message);
@@ -406,13 +435,13 @@ function createStorageList(listName, storageInstance, storageExpires) {
   }
   instance.push = push;
   /**
-   * 去列表的最后一个元素
+   * 列表数组
    *
    * @return {Object} 返回最后一个元素，如果列表为空则返回 undefined
    '''<example>'''
    * @example toArray():base
     ```js
-    var storageList = app.createStorageList('h5t_pop_log');
+    var storageList = app.createStorageList('h5t', 'toArray', 'log');
     storageList.push({
       level: 'info',
       message: 'click button1'
@@ -421,7 +450,7 @@ function createStorageList(listName, storageInstance, storageExpires) {
       level: 'info',
       message: 'click button2'
     });
-    var data = JSON.parse(localStorage.h5t_pop_log);
+    var data = JSON.parse(localStorage['h5t@storageList/h5t/toArray/log']);
     var items = storageList.toArray();
     console.log(items.pop().data.message);
     // > click button2
@@ -442,7 +471,7 @@ function createStorageList(listName, storageInstance, storageExpires) {
    '''<example>'''
    * @example clean():base
     ```js
-    var storageList = app.createStorageList('h5t_clean_log');
+    var storageList = app.createStorageList('h5t', 'clean', 'log');
     storageList.push({
       level: 'info',
       message: 'click button1'
@@ -455,11 +484,11 @@ function createStorageList(listName, storageInstance, storageExpires) {
       level: 'info',
       message: 'click button3'
     });
-    var data = JSON.parse(localStorage.h5t_clean_log);
+    var data = JSON.parse(localStorage['h5t@storageList/h5t/clean/log']);
     data[1].birthday = 0;
-    localStorage.h5t_clean_log = JSON.stringify(data);
+    localStorage['h5t@storageList/h5t/clean/log'] = JSON.stringify(data);
     storageList.clean();
-    data = JSON.parse(localStorage.h5t_clean_log);
+    data = JSON.parse(localStorage['h5t@storageList/h5t/clean/log']);
     console.log(data.length);
     // > 2
     console.log(data[0].data.message);
@@ -505,7 +534,7 @@ function createStorageList(listName, storageInstance, storageExpires) {
    '''<example>'''
    * @example remove():base
     ```js
-    var storageList = app.createStorageList('h5t_remove_log');
+    var storageList = app.createStorageList('h5t', 'remove', 'log');
     var id1 = storageList.push({
       level: 'info',
       message: 'click button1'
@@ -515,7 +544,7 @@ function createStorageList(listName, storageInstance, storageExpires) {
       message: 'click button2'
     });
     storageList.remove(id1);
-    var data = JSON.parse(localStorage.h5t_remove_log);
+    var data = JSON.parse(localStorage['h5t@storageList/h5t/remove/log']);
     console.log(data.length);
     // > 1
     console.log(data[0].id === id2);
@@ -540,31 +569,18 @@ function createStorageList(listName, storageInstance, storageExpires) {
   return instance;
 }
 /*</function>*/
-/*<function name="storageKeys">*/
-var storageKeys = (function () {
-  var prefix = 'h5t@';
-  return {
-    userId: prefix + 'global/userId',
-    scanTime: prefix + 'global/scanTime',
-    sessionId: prefix + 'global/sessionId',
-    sessionBirthday: prefix + 'global/sessionBirthday',
-    sessionLiveTime: prefix + 'global/sessionLiveTime',
-    storageList: prefix + 'storageList/send/#{app}/#{tracker}',
-    storageListTS: prefix + 'storageList/send/ts/#{app}/#{tracker}',
-  };
-})();
-/*</function>*/
 /*<function name="createStorage" depend="createStorageList">*/
 /**
  * 创建存储器
  *
- * @param {Object} argv 配置项
+ * @param {string} appName 应用名
+ * @param {string} trackerName 追踪器名
  * @return {Object} 返回存储器
  */
-function createStorage(trackerName) {
+function createStorage(appName, trackerName) {
   var instance = {};
-  var storageListSend = createStorageList(trackerName + '_send');
-  var storageListLog = createStorageList(trackerName + '_log');
+  var storageListSend = createStorageList(appName, trackerName, 'send');
+  var storageListLog = createStorageList(appName, trackerName, 'log');
   /**
    * 记录日志
    *
@@ -600,11 +616,11 @@ function createStorage(trackerName) {
    '''<example>'''
    * @example send():base
     ```js
-    var storage = app.createStorage('h5t_scan');
+    var storage = app.createStorage('h5t', 'scan');
     storage.send({
       hisType: 'pageview'
     }, '/host/path/to/t.gif');
-    var data = JSON.parse(localStorage.h5t_scan_send);
+    var data = JSON.parse(localStorage['h5t@storageList/h5t/scan/send']);
     console.log(data[0].data.accept);
     // > /host/path/to/t.gif
     console.log(data[0].data.query);
@@ -612,11 +628,11 @@ function createStorage(trackerName) {
     ```
    * @example send():acceptStyle
     ```js
-    var storage = app.createStorage('h5t_scan2');
+    var storage = app.createStorage('h5t', 'scan2');
     storage.send({
       hisType: 'pageview'
     }, '/host/path/to/t.gif', 'path');
-    var data = JSON.parse(localStorage.h5t_scan2_send);
+    var data = JSON.parse(localStorage['h5t@storageList/h5t/scan2/send']);
     console.log(data[0].data.acceptStyle);
     // > path
     ```
@@ -729,6 +745,130 @@ function createStorage(trackerName) {
     };
   }
   /*</function>*/
+/*<function name="createSessionManager" depend="storageKeys,createEmitter,createGetter">*/
+/**
+ * 创建 Session 管理器
+ *
+ * @param {Number} sessionExpires 过期时间 30 秒
+ * @return {Object} 返回管理器会话实例
+ '''<example>'''
+ * @example createSessionManager():base
+  ```js
+  var sessionManager = app.createSessionManager();
+  var sessionId = sessionStorage['h5t@global/sessionId'];
+  var birthday = sessionStorage['h5t@global/sessionBirthday'];
+  var liveTime = sessionStorage['h5t@global/sessionLiveTime'];
+  console.log(!!sessionId && !!birthday && !!liveTime);
+  // > true
+  console.log(sessionId === sessionManager.get('id'));
+  // > true
+  console.log(birthday === sessionManager.get('birthday'));
+  // > true
+  console.log(liveTime === sessionManager.get('liveTime'));
+  // > true
+  ```
+  * @example createSessionManager():sessionExpires => 3
+  ```js
+  var timeout = 3;
+  var sessionManager = app.createSessionManager(timeout);
+  setTimeout(function(){
+    console.log(Date.now() - sessionManager.get('liveTime') > timeout * 1000);
+    // > true
+    //done();
+  }, 3500);
+  ```
+ '''</example>'''
+ */
+function createSessionManager(sessionExpires) {
+  sessionExpires = sessionExpires || 30;
+  var instance = createEmitter();
+  var fieldsKey = {
+    id: storageKeys.sessionId,
+    birthday: storageKeys.sessionBirthday,
+    liveTime: storageKeys.sessionLiveTime,
+  };
+  instance.get = createGetter(instance, function (name) {
+    return sessionStorage[fieldsKey[name]];
+  }, true);
+  /**
+   * 创建 Session
+   '''<example>'''
+   * @example createSession():base
+    ```js
+    var sessionManager = app.createSessionManager();
+    var sessionId = sessionManager.get('id');
+    console.log(!!sessionId);
+    // > true
+    sessionManager.createSession();
+    console.log(!!sessionManager.get('id'));
+    // > true
+    console.log(sessionId != sessionManager.get('id'));
+    // > true
+    ```
+   '''</example>'''
+   */
+  function createSession() {
+    if (sessionStorage[storageKeys.sessionId]) {
+      instance.emit('destroySession');
+    }
+    var now = Date.now();
+    sessionStorage[storageKeys.sessionId] = newGuid();
+    sessionStorage[storageKeys.sessionBirthday] = now;
+    sessionStorage[storageKeys.sessionLiveTime] = now;
+    instance.emit('createSession');
+  }
+  instance.createSession = createSession;
+  /**
+   * 释放 Session
+   '''<example>'''
+   * @example destroySession():base
+    ```js
+    var sessionManager = app.createSessionManager();
+    console.log(!!sessionManager.get('id'));
+    // > true
+    sessionManager.destroySession();
+    console.log(!!sessionManager.get('id'));
+    // > false
+    ```
+   '''</example>'''
+   */
+  function destroySession() {
+    if (sessionStorage[storageKeys.sessionId]) {
+      delete sessionStorage[storageKeys.sessionId];
+      delete sessionStorage[storageKeys.sessionBirthday];
+      delete sessionStorage[storageKeys.sessionLiveTime];
+      instance.emit('destroySession');
+    }
+  }
+  instance.destroySession = destroySession;
+  if (!sessionStorage[storageKeys.sessionId]) {
+    createSession();
+  }
+  var timer;
+  function inputHandler() {
+    if (timer) {
+      return;
+    }
+    var now = Date.now();
+    timer = setTimeout(function() {
+      if (Date.now() - sessionStorage[storageKeys.liveTime] >= sessionExpires * 1000) {
+        createSession();
+      } else {
+        sessionStorage[storageKeys.sessionLiveTime] = liveTime;
+      }
+      timer = null;
+    }, 1000);
+  }
+  [
+    'keydown', 'input', 'keyup',
+    'click', 'contextmenu', 'mousemove',
+    'touchstart', 'touchend', 'touchmove'
+  ].forEach(function(name) {
+    document.addEventListener(name, inputHandler, false);
+  });
+  return instance;
+}
+/*</function>*/
 /*<function name="createTracker" depend="createEmitter,createGetter,createSetter,createStorage">*/
 /**
  * 创建追踪器
@@ -780,15 +920,15 @@ function createStorage(trackerName) {
   ```
  '''</example>'''
  */
-function createTracker(name) {
+function createTracker(appName, trackerName) {
   /**
    * 追踪器实例
    *
    * @type {Object}
    */
   var instance = createEmitter();
-  instance.name = name;
-  var storage = createStorage(name);
+  instance.name = trackerName;
+  var storage = createStorage(appName, trackerName);
   /**
    * 是否被创建过
    */
@@ -842,7 +982,7 @@ function createTracker(name) {
    '''<example>'''
    * @example send():field is null
     ```js
-    var tracker = app.createTracker('send_case_1');
+    var tracker = app.createTracker('h5t', 'send_case_1');
     tracker.set({
       x: 1,
       y: 2
@@ -855,7 +995,7 @@ function createTracker(name) {
         z: 'z3'
       }
     });
-    var data = JSON.parse(localStorage.send_case_1_send);
+    var data = JSON.parse(localStorage['h5t@storageList/h5t/send_case_1/send']);
     console.log(data[0].data.query);
     // > z=3&x=1&y=2
     console.log(data[1].data.query);
@@ -863,7 +1003,7 @@ function createTracker(name) {
     ```
    * @example send():field is null
     ```js
-    var tracker = app.createTracker('send_case_2');
+    var tracker = app.createTracker('h5', 'send_case_2');
     tracker.send({z: 3});
     tracker.create({});
     ```
@@ -911,7 +1051,7 @@ function createTracker(name) {
    '''<example>'''
    * @example log():case 1
     ```js
-    var tracker = app.createTracker('log_case_1');
+    var tracker = app.createTracker('h5t', 'log_case_1');
     tracker.set({
       x: 1,
       y: 2
@@ -927,7 +1067,7 @@ function createTracker(name) {
     tracker.fatal('fatal log.');
     tracker.create({
     });
-    var data = JSON.parse(localStorage.log_case_1_log);
+    var data = JSON.parse(localStorage['h5t@storageList/h5t/log_case_1/log']);
     data.forEach(function (item) {
       console.log(item.data.level, item.data.message);
     });
@@ -1018,85 +1158,6 @@ function createTracker(name) {
   return instance;
 }
 /*</function>*/
-/*<function name="format">*/
-function format(template, json) {
-  return template.replace(/#\{(.*?)\}/g, function(all, key) {
-    return json && (key in json) ? json[key] : "";
-  });
-}
-/*</function>*/
-/*<function name="createSessionManager" depend="storageKeys,createEmitter,createGetter">*/
-/**
- * 创建 Session 管理器
- *
- * @param {Number} sessionExpires 过期时间 30 秒
- * @return {Object} 返回管理器会话实例
- */
-function createSessionManager(sessionExpires) {
-  sessionExpires = sessionExpires || 30;
-  var instance = createEmitter();
-  var fieldsKey = {
-    id: storageKeys.sessionId,
-    birthday: storageKeys.sessionBirthday,
-    liveTime: storageKeys.sessionLiveTime,
-  };
-  instance.get = createGetter(instance, function (name) {
-    return sessionStorage[fieldsKey[name]];
-  }, true);
-  /**
-   * 创建 Session
-   */
-  function createSession() {
-    if (sessionStorage[storageKeys.sessionId]) {
-      instance.emit('destroySession');
-    }
-    var now = Date.now();
-    sessionStorage[storageKeys.sessionId] = newGuid();
-    sessionStorage[storageKeys.sessionBirthday] = now;
-    sessionStorage[storageKeys.sessionLiveTime] = now;
-    instance.emit('createSession');
-  }
-  instance.createSession = createSession;
-  /**
-   * 创建 Session
-   */
-  function destroySession() {
-    if (sessionStorage[storageKeys.sessionId]) {
-      delete sessionStorage[storageKeys.sessionId];
-      delete sessionStorage[storageKeys.sessionBirthday];
-      delete sessionStorage[storageKeys.sessionLiveTime];
-      instance.emit('destroySession');
-    }
-  }
-  instance.createSession = createSession;
-  if (!sessionStorage[storageKeys.sessionId]) {
-    createSession();
-  }
-  var timer;
-  function inputHandler() {
-    if (timer) {
-      return;
-    }
-    var now = Date.now();
-    timer = setTimeout(function() {
-      if (Date.now() - sessionStorage[storageKeys.liveTime] >= sessionExpires) {
-        createSession();
-      } else {
-        sessionStorage[storageKeys.sessionLiveTime] = liveTime;
-      }
-      timer = null;
-    }, 1000);
-  }
-  [
-    'keydown', 'input', 'keyup',
-    'click', 'contextmenu', 'mousemove',
-    'touchstart', 'touchend', 'touchmove'
-  ].forEach(function(name) {
-    document.addEventListener(name, inputHandler, false);
-  });
-  return instance;
-}
-/*</function>*/
 /*<function name="createApp" depend="createEmitter,createTracker,newGuid,format,storageKeys,createSessionManager">*/
 /**
  * 追踪器实例
@@ -1110,7 +1171,17 @@ var trackers = {};
  * @param {string} appName 应用名
  * @param {Object} argv 配置项
  * @return {Object} 返回应用追踪器实例
- */
+ '''<example>'''
+ * @example test done
+ ```js
+  setTimeout(function() {
+    console.log('hello');
+    // > hello
+    //done();
+  }, 1000);
+ ```
+ '''</example>'''
+  */
 function createApp(appName) {
   console.log('createApp() appName: %s', appName);
   var userId = localStorage[storageKeys.userId];
@@ -1126,8 +1197,17 @@ function createApp(appName) {
   instance.createStorageList = createStorageList;
   instance.createTracker = createTracker;
   instance.newGuid = newGuid;
+  instance.storageKeys = storageKeys;
   instance.createApp = createApp;
+  instance.createSessionManager = createSessionManager;
   trackers[instance.name] = instance;
+  var sessionManager = createSessionManager();
+  sessionManager.on('createSession', function () {
+    instance.emit('createSession');
+  });
+  sessionManager.on('destroySession', function() {
+    instance.emit('destroySession');
+  });
   /*=== 生命周期 ===*/
   /**
    * session 创建的时间
@@ -1187,7 +1267,7 @@ function createApp(appName) {
     } else {
       var tracker = trackers[trackerName];
       if (!tracker) {
-        tracker = trackers[trackerName] = createTracker(appName + '_' + trackerName);
+        tracker = trackers[trackerName] = createTracker(appName, trackerName);
         tracker.set({
           user: userId
         });

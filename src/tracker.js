@@ -137,7 +137,7 @@ function createTracker(appName, trackerName) {
    '''<example>'''
    * @example send():field is null
     ```js
-    var tracker = app.createTracker('send_case_1');
+    var tracker = app.createTracker('h5t', 'send_case_1');
     tracker.set({
       x: 1,
       y: 2
@@ -151,7 +151,7 @@ function createTracker(appName, trackerName) {
       }
     });
 
-    var data = JSON.parse(localStorage.send_case_1_send);
+    var data = JSON.parse(localStorage['h5t@storageList/h5t/send_case_1/send']);
 
     console.log(data[0].data.query);
     // > z=3&x=1&y=2
@@ -161,7 +161,7 @@ function createTracker(appName, trackerName) {
     ```
    * @example send():field is null
     ```js
-    var tracker = app.createTracker('send_case_2');
+    var tracker = app.createTracker('h5', 'send_case_2');
     tracker.send({z: 3});
     tracker.create({});
     ```
@@ -209,7 +209,7 @@ function createTracker(appName, trackerName) {
    '''<example>'''
    * @example log():case 1
     ```js
-    var tracker = app.createTracker('log_case_1');
+    var tracker = app.createTracker('h5t', 'log_case_1');
     tracker.set({
       x: 1,
       y: 2
@@ -226,7 +226,7 @@ function createTracker(appName, trackerName) {
     tracker.create({
     });
 
-    var data = JSON.parse(localStorage.log_case_1_log);
+    var data = JSON.parse(localStorage['h5t@storageList/h5t/log_case_1/log']);
 
     data.forEach(function (item) {
       console.log(item.data.level, item.data.message);

@@ -12,15 +12,28 @@ function print() {
   printLines.push(util.format.apply(util, arguments));
 }
 describe("./src/app.js", function () {
+  this.timeout(5000);
+  printLines = []; it("test done", function(done) {
+ printLines = [];
+  setTimeout(function() {
+    print('hello');
+    assert.equal(printLines.join("\n"), "hello"); printLines = [];
+    done();
+  }, 1000);
+ });
 });
 describe("./src/common.js", function () {
-  it("newGuid:base", function () {
+  this.timeout(5000);
+  printLines = []; it("newGuid:base", function() {
+ printLines = [];
   print(/^[a-z0-9]+$/.test(app.newGuid()));
   assert.equal(printLines.join("\n"), "true"); printLines = [];
   });
 });
 describe("./src/event.js", function () {
-  it("base", function () {
+  this.timeout(5000);
+  printLines = []; it("base", function() {
+ printLines = [];
     var emitter = app.createEmitter();
     emitter.on('click', function (data) {
       print('on', data);
@@ -44,39 +57,96 @@ describe("./src/event.js", function () {
     emitter.off('click', bee);
     emitter.emit('click', 'hello 3');
     assert.equal(printLines.join("\n"), "on hello 3"); printLines = [];
-  });
+    });
 });
 describe("./src/index.js", function () {
+  this.timeout(5000);
+  printLines = [];
 });
 describe("./src/inline.js", function () {
+  this.timeout(5000);
+  printLines = [];
 });
 describe("./src/session-manager.js", function () {
+  this.timeout(5000);
+  printLines = []; it("createSessionManager():base", function() {
+ printLines = [];
+  var sessionManager = app.createSessionManager();
+  var sessionId = sessionStorage['h5t@global/sessionId'];
+  var birthday = sessionStorage['h5t@global/sessionBirthday'];
+  var liveTime = sessionStorage['h5t@global/sessionLiveTime'];
+  print(!!sessionId && !!birthday && !!liveTime);
+  assert.equal(printLines.join("\n"), "true"); printLines = [];
+  print(sessionId === sessionManager.get('id'));
+  assert.equal(printLines.join("\n"), "true"); printLines = [];
+  print(birthday === sessionManager.get('birthday'));
+  assert.equal(printLines.join("\n"), "true"); printLines = [];
+  print(liveTime === sessionManager.get('liveTime'));
+  assert.equal(printLines.join("\n"), "true"); printLines = [];
+  });
+ it("createSessionManager():sessionExpires => 3", function(done) {
+ printLines = [];
+  var timeout = 3;
+  var sessionManager = app.createSessionManager(timeout);
+  setTimeout(function(){
+    print(Date.now() - sessionManager.get('liveTime') > timeout * 1000);
+    assert.equal(printLines.join("\n"), "true"); printLines = [];
+    done();
+  }, 3500);
+  });
+ it("createSession():base", function() {
+ printLines = [];
+    var sessionManager = app.createSessionManager();
+    var sessionId = sessionManager.get('id');
+    print(!!sessionId);
+    assert.equal(printLines.join("\n"), "true"); printLines = [];
+    sessionManager.createSession();
+    print(!!sessionManager.get('id'));
+    assert.equal(printLines.join("\n"), "true"); printLines = [];
+    print(sessionId != sessionManager.get('id'));
+    assert.equal(printLines.join("\n"), "true"); printLines = [];
+    });
+ it("destroySession():base", function() {
+ printLines = [];
+    var sessionManager = app.createSessionManager();
+    print(!!sessionManager.get('id'));
+    assert.equal(printLines.join("\n"), "true"); printLines = [];
+    sessionManager.destroySession();
+    print(!!sessionManager.get('id'));
+    assert.equal(printLines.join("\n"), "false"); printLines = [];
+    });
 });
 describe("./src/storage-keys.js", function () {
+  this.timeout(5000);
+  printLines = [];
 });
 describe("./src/storage-list.js", function () {
-  it("createStorageList():storageInstance => sessionStorage", function () {
-    var storageList = app.createStorageList('h5t_base1_log', sessionStorage);
+  this.timeout(5000);
+  printLines = []; it("createStorageList():storageInstance => sessionStorage", function() {
+ printLines = [];
+    var storageList = app.createStorageList('h5t', 'base1', 'log', sessionStorage);
     storageList.push({
       level: 'info',
       message: 'click button1'
     });
-    var data = JSON.parse(sessionStorage.h5t_base1_log);
+    var data = JSON.parse(sessionStorage['h5t@storageList/h5t/base1/log']);
     print(data.length);
     assert.equal(printLines.join("\n"), "1"); printLines = [];
-  });
-  it("createStorageList():storageExpires => 10000", function () {
-    var storageList = app.createStorageList('h5t_base2_log', localStorage, 10000);
+    });
+ it("createStorageList():storageExpires => 10000", function() {
+ printLines = [];
+    var storageList = app.createStorageList('h5t', 'base2', 'log', localStorage, 10000);
     storageList.push({
       level: 'info',
       message: 'click button1'
     });
-    var data = JSON.parse(localStorage.h5t_base2_log);
+    var data = JSON.parse(localStorage['h5t@storageList/h5t/base2/log']);
     print(data[0].expires);
     assert.equal(printLines.join("\n"), "10000"); printLines = [];
-  });
-  it("push():base", function () {
-    var storageList = app.createStorageList('h5t_push_log');
+    });
+ it("push():base", function() {
+ printLines = [];
+    var storageList = app.createStorageList('h5t', 'push', 'log');
     storageList.push({
       level: 'info',
       message: 'click button1'
@@ -85,16 +155,17 @@ describe("./src/storage-list.js", function () {
       level: 'info',
       message: 'click button2'
     });
-    var data = JSON.parse(localStorage.h5t_push_log);
+    var data = JSON.parse(localStorage['h5t@storageList/h5t/push/log']);
     print(data.length);
     assert.equal(printLines.join("\n"), "2"); printLines = [];
     print(data[0].data.message);
     assert.equal(printLines.join("\n"), "click button1"); printLines = [];
     print(data[1].data.message);
     assert.equal(printLines.join("\n"), "click button2"); printLines = [];
-  });
-  it("toArray():base", function () {
-    var storageList = app.createStorageList('h5t_pop_log');
+    });
+ it("toArray():base", function() {
+ printLines = [];
+    var storageList = app.createStorageList('h5t', 'toArray', 'log');
     storageList.push({
       level: 'info',
       message: 'click button1'
@@ -103,15 +174,16 @@ describe("./src/storage-list.js", function () {
       level: 'info',
       message: 'click button2'
     });
-    var data = JSON.parse(localStorage.h5t_pop_log);
+    var data = JSON.parse(localStorage['h5t@storageList/h5t/toArray/log']);
     var items = storageList.toArray();
     print(items.pop().data.message);
     assert.equal(printLines.join("\n"), "click button2"); printLines = [];
     print(items.pop().data.message);
     assert.equal(printLines.join("\n"), "click button1"); printLines = [];
-  });
-  it("clean():base", function () {
-    var storageList = app.createStorageList('h5t_clean_log');
+    });
+ it("clean():base", function() {
+ printLines = [];
+    var storageList = app.createStorageList('h5t', 'clean', 'log');
     storageList.push({
       level: 'info',
       message: 'click button1'
@@ -124,20 +196,21 @@ describe("./src/storage-list.js", function () {
       level: 'info',
       message: 'click button3'
     });
-    var data = JSON.parse(localStorage.h5t_clean_log);
+    var data = JSON.parse(localStorage['h5t@storageList/h5t/clean/log']);
     data[1].birthday = 0;
-    localStorage.h5t_clean_log = JSON.stringify(data);
+    localStorage['h5t@storageList/h5t/clean/log'] = JSON.stringify(data);
     storageList.clean();
-    data = JSON.parse(localStorage.h5t_clean_log);
+    data = JSON.parse(localStorage['h5t@storageList/h5t/clean/log']);
     print(data.length);
     assert.equal(printLines.join("\n"), "2"); printLines = [];
     print(data[0].data.message);
     assert.equal(printLines.join("\n"), "click button1"); printLines = [];
     print(data[1].data.message);
     assert.equal(printLines.join("\n"), "click button3"); printLines = [];
-  });
-  it("remove():base", function () {
-    var storageList = app.createStorageList('h5t_remove_log');
+    });
+ it("remove():base", function() {
+ printLines = [];
+    var storageList = app.createStorageList('h5t', 'remove', 'log');
     var id1 = storageList.push({
       level: 'info',
       message: 'click button1'
@@ -147,43 +220,49 @@ describe("./src/storage-list.js", function () {
       message: 'click button2'
     });
     storageList.remove(id1);
-    var data = JSON.parse(localStorage.h5t_remove_log);
+    var data = JSON.parse(localStorage['h5t@storageList/h5t/remove/log']);
     print(data.length);
     assert.equal(printLines.join("\n"), "1"); printLines = [];
     print(data[0].id === id2);
     assert.equal(printLines.join("\n"), "true"); printLines = [];
-  });
+    });
 });
 describe("./src/storage.js", function () {
-  it("send():base", function () {
-    var storage = app.createStorage('h5t_scan');
+  this.timeout(5000);
+  printLines = []; it("send():base", function() {
+ printLines = [];
+    var storage = app.createStorage('h5t', 'scan');
     storage.send({
       hisType: 'pageview'
     }, '/host/path/to/t.gif');
-    var data = JSON.parse(localStorage.h5t_scan_send);
+    var data = JSON.parse(localStorage['h5t@storageList/h5t/scan/send']);
     print(data[0].data.accept);
     assert.equal(printLines.join("\n"), "/host/path/to/t.gif"); printLines = [];
     print(data[0].data.query);
     assert.equal(printLines.join("\n"), "hisType=pageview"); printLines = [];
-  });
-  it("send():acceptStyle", function () {
-    var storage = app.createStorage('h5t_scan2');
+    });
+ it("send():acceptStyle", function() {
+ printLines = [];
+    var storage = app.createStorage('h5t', 'scan2');
     storage.send({
       hisType: 'pageview'
     }, '/host/path/to/t.gif', 'path');
-    var data = JSON.parse(localStorage.h5t_scan2_send);
+    var data = JSON.parse(localStorage['h5t@storageList/h5t/scan2/send']);
     print(data[0].data.acceptStyle);
     assert.equal(printLines.join("\n"), "path"); printLines = [];
-  });
-  it("scan():base", function () {
+    });
+ it("scan():base", function() {
+ printLines = [];
     var storage = app.createStorage('h5t_scan');
     storage.send({
       hisType: 'pageview'
     }, '/host/path/to/t.gif');
-  });
+    });
 });
 describe("./src/tracker.js", function () {
-  it("createTracker():base", function () {
+  this.timeout(5000);
+  printLines = []; it("createTracker():base", function() {
+ printLines = [];
   var tracker = app.createTracker('base');
   var count = 0;
   tracker.error('error1');
@@ -224,7 +303,8 @@ describe("./src/tracker.js", function () {
     },
   });
   });
-  it("set() & get():base", function () {
+ it("set() & get():base", function() {
+ printLines = [];
     var tracker = app.createTracker('setter');
     tracker.set({
       x: 1,
@@ -234,9 +314,10 @@ describe("./src/tracker.js", function () {
       print(x, y);
       assert.equal(printLines.join("\n"), "1 2"); printLines = [];
     });
-  });
-  it("send():field is null", function () {
-    var tracker = app.createTracker('send_case_1');
+    });
+ it("send():field is null", function() {
+ printLines = [];
+    var tracker = app.createTracker('h5t', 'send_case_1');
     tracker.set({
       x: 1,
       y: 2
@@ -249,19 +330,21 @@ describe("./src/tracker.js", function () {
         z: 'z3'
       }
     });
-    var data = JSON.parse(localStorage.send_case_1_send);
+    var data = JSON.parse(localStorage['h5t@storageList/h5t/send_case_1/send']);
     print(data[0].data.query);
     assert.equal(printLines.join("\n"), "z=3&x=1&y=2"); printLines = [];
     print(data[1].data.query);
     assert.equal(printLines.join("\n"), "x=1&y=2"); printLines = [];
-  });
-  it("send():field is null", function () {
-    var tracker = app.createTracker('send_case_2');
+    });
+ it("send():field is null", function() {
+ printLines = [];
+    var tracker = app.createTracker('h5', 'send_case_2');
     tracker.send({z: 3});
     tracker.create({});
-  });
-  it("log():case 1", function () {
-    var tracker = app.createTracker('log_case_1');
+    });
+ it("log():case 1", function() {
+ printLines = [];
+    var tracker = app.createTracker('h5t', 'log_case_1');
     tracker.set({
       x: 1,
       y: 2
@@ -277,19 +360,21 @@ describe("./src/tracker.js", function () {
     tracker.fatal('fatal log.');
     tracker.create({
     });
-    var data = JSON.parse(localStorage.log_case_1_log);
+    var data = JSON.parse(localStorage['h5t@storageList/h5t/log_case_1/log']);
     data.forEach(function (item) {
       print(item.data.level, item.data.message);
     });
     assert.equal(printLines.join("\n"), "debug default log.\nwarn hello\ndebug debug log.\ninfo info log.\nwarn warn log.\nfatal fatal log."); printLines = [];
-  });
-  it("create():opts in undefined", function () {
+    });
+ it("create():opts in undefined", function() {
+ printLines = [];
     var tracker = app.createTracker('create_case_1');
     tracker.create();
-  });
-  it("create():duplicate create", function () {
+    });
+ it("create():duplicate create", function() {
+ printLines = [];
     var tracker = app.createTracker('create_case_2');
     tracker.create({});
     tracker.create({});
-  });
+    });
 });

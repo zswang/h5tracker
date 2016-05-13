@@ -54,12 +54,12 @@ function createStorage(appName, trackerName) {
    '''<example>'''
    * @example send():base
     ```js
-    var storage = app.createStorage('h5t_scan');
+    var storage = app.createStorage('h5t', 'scan');
     storage.send({
       hisType: 'pageview'
     }, '/host/path/to/t.gif');
 
-    var data = JSON.parse(localStorage.h5t_scan_send);
+    var data = JSON.parse(localStorage['h5t@storageList/h5t/scan/send']);
 
     console.log(data[0].data.accept);
     // > /host/path/to/t.gif
@@ -69,12 +69,12 @@ function createStorage(appName, trackerName) {
     ```
    * @example send():acceptStyle
     ```js
-    var storage = app.createStorage('h5t_scan2');
+    var storage = app.createStorage('h5t', 'scan2');
     storage.send({
       hisType: 'pageview'
     }, '/host/path/to/t.gif', 'path');
 
-    var data = JSON.parse(localStorage.h5t_scan2_send);
+    var data = JSON.parse(localStorage['h5t@storageList/h5t/scan2/send']);
 
     console.log(data[0].data.acceptStyle);
     // > path

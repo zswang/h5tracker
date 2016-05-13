@@ -46,7 +46,9 @@ var trackers = {};
  '''</example>'''
   */
 function createApp(appName) {
+  /*<remove trigger="release">*/
   console.log('createApp() appName: %s', appName);
+  /*</remove>*/
 
   var userId = localStorage[storageKeys.userId];
   if (!userId) {
@@ -78,42 +80,6 @@ function createApp(appName) {
   });
 
   /*=== 生命周期 ===*/
-
-  /**
-   * session 创建的时间
-   *
-   * @type {number}
-   */
-  var sessionTime;
-  /**
-   * session ID
-   *
-   * @type {string}
-   */
-  var sessionId;
-
-  function start() {
-    sessionId = newGuid();
-    sessionTime = Date.now();
-    emit('start');
-  }
-
-  function resume() {
-    emit('resume');
-  }
-
-  function pause() {
-    emit('pasue');
-  }
-
-  function exit() {
-    emit('exit');
-  }
-
-  function config() {
-
-  }
-  instance.config = config;
 
   /**
    * 执行命令

@@ -132,7 +132,7 @@ function createSessionManager(sessionExpires) {
       if (Date.now() - sessionStorage[storageKeys.liveTime] >= sessionExpires * 1000) {
         createSession();
       } else {
-        sessionStorage[storageKeys.sessionLiveTime] = liveTime;
+        sessionStorage[storageKeys.sessionLiveTime] = now;
       }
       timer = null;
     }, 1000);

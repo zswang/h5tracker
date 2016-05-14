@@ -11,7 +11,11 @@ var createSetter = require('jsets').createSetter;
 var createStorage = require('./storage').createStorage;
 /*</jdists>*/
 
-/*<function name="createTracker" depend="createEmitter,createGetter,createSetter,createStorage">*/
+/*<jdists encoding="fndep" import="./common.js" depend="newGuid">*/
+var newGuid = require('./common').newGuid;
+/*</jdists>*/
+
+/*<function name="createTracker" depend="createEmitter,createGetter,createSetter,createStorage,newGuid">*/
 /**
  * 创建追踪器
  *
@@ -180,7 +184,9 @@ function createTracker(appName, trackerName) {
       return;
     }
     // merge data
-    var item = {};
+    var item = {
+      id: newGuid()
+    };
     if (options.data) {
       Object.keys(options.data).forEach(function (key) {
         item[key] = options.data[key];

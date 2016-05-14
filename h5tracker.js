@@ -149,20 +149,6 @@
     return method;
   }
   /*</function>*/
-/*<function name="storageKeys">*/
-var storageKeys = (function () {
-  var prefix = 'h5t@';
-  return {
-    userId: prefix + 'global/userId',
-    scanTime: prefix + 'global/scanTime',
-    sessionId: prefix + 'global/sessionId',
-    sessionBirthday: prefix + 'global/sessionBirthday',
-    sessionLiveTime: prefix + 'global/sessionLiveTime',
-    storageList: prefix + 'storageList/#{app}/#{tracker}/#{name}',
-    storageListTS: prefix + 'storageList/#{app}/#{tracker}/#{name}/ts',
-  };
-})();
-/*</function>*/
 /*<function name="newGuid">*/
 /**
  * 比较大的概率上，生成唯一 ID
@@ -184,6 +170,20 @@ var newGuid = (function() {
   }
 })();
 /*</function>*/
+/*<function name="storageKeys">*/
+var storageKeys = (function () {
+  var prefix = 'h5t@';
+  return {
+    userId: prefix + 'global/userId',
+    scanTime: prefix + 'global/scanTime',
+    sessionId: prefix + 'global/sessionId',
+    sessionBirthday: prefix + 'global/sessionBirthday',
+    sessionLiveTime: prefix + 'global/sessionLiveTime',
+    storageList: prefix + 'storageList/#{app}/#{tracker}/#{name}',
+    storageListTS: prefix + 'storageList/#{app}/#{tracker}/#{name}/ts',
+  };
+})();
+/*</function>*/
 /*<function name="format">*/
 function format(template, json) {
   return template.replace(/#\{(.*?)\}/g, function(all, key) {
@@ -191,121 +191,6 @@ function format(template, json) {
   });
 }
 /*</function>*/
-  /*<function name="createEmitter">*/
-  /**
-   * 创建事件对象
-   '''<example>'''
-   * @example base
-    ```js
-    var emitter = app.createEmitter();
-    emitter.on('click', function (data) {
-      console.log('on', data);
-    });
-    emitter.once('click', function (data) {
-      console.log('once', data);
-    });
-    function bee(data) {
-      console.log('bee', data);
-    }
-    emitter.on('click', bee);
-    emitter.on('click2', function (data) {
-      console.log('on', data);
-    });
-    emitter.emit('click2', 'hello 1');
-    // > on hello 1
-    emitter.emit('click', 'hello 1');
-    // > on hello 1
-    // > once hello 1
-    // > bee hello 1
-    emitter.emit('click', 'hello 2');
-    // > on hello 2
-    // > bee hello 2
-    emitter.off('click', bee);
-    emitter.emit('click', 'hello 3');
-    // > on hello 3
-    ```
-   '''</example>'''
-   */
-  function createEmitter() {
-    /**
-     * 事件对象实例
-     *
-     * @type {Object}
-     */
-    var instance = {};
-    /**
-     * 事件列表
-     *
-     * @type {Array}
-     * @param {string} item.event 事件名
-     * @param {Function} item.fn 回调函数
-     */
-    var callbacks = [];
-    /**
-     * 事件绑定
-     *
-     * @param {string} event 事件名
-     * @param {Function} fn 回调函数
-     * @return {Object} 返回事件实例
-     */
-    function on(event, fn) {
-      callbacks.push({
-        event: event,
-        fn: fn
-      });
-      return instance;
-    }
-    instance.on = on;
-    /**
-     * 取消事件绑定
-     *
-     * @param {string} event 事件名
-     * @param {Function} fn 回调函数
-     * @return {Object} 返回事件实例
-     */
-    function off(event, fn) {
-      callbacks = callbacks.filter(function (item) {
-        return !(item.event === event && item.fn === fn);
-      });
-      return instance;
-    }
-    instance.off = off;
-    /**
-     * 事件绑定，只触发一次
-     *
-     * @param {string} event 事件名
-     * @param {Function} fn 回调函数
-     * @return {Object} 返回事件实例
-     */
-    function once(event, fn) {
-      function handler() {
-        off(event, handler);
-        fn.apply(instance, arguments);
-      }
-      on(event, handler);
-      return instance;
-    }
-    instance.once = once;
-    /**
-     * 触发事件
-     *
-     * @param {string} event 事件名
-     * @param {Function} fn 回调函数
-     * @return {Object} 返回事件实例
-     */
-    function emit(event) {
-      var argv = [].slice.call(arguments, 1);
-      callbacks.filter(function (item) {
-        return item.event === event;
-      }).forEach(function (item) {
-        item.fn.apply(instance, argv);
-      });
-      return instance;
-    }
-    instance.emit = emit;
-    return instance;
-  }
-  /*</function>*/
 /*<function name="createStorageList" depend="newGuid,format,storageKeys,createGetter">*/
 /**
  * 创建存储列表
@@ -592,16 +477,14 @@ function createStorageList(appName, trackerName, listName, storageInstance, stor
    */
   function update(id, item) {
     var data = instance.get(id);
-    if (data) {
-      Object.keys(data).forEach(function(key) {
-        if (item[key]) {
-          data[key] = item[key];
-        }
-      });
-      save();
-      return true;
+    if (!data) {
+      return;
     }
-    return false;
+    Object.keys(item).forEach(function(key) {
+      data[key] = item[key];
+    });
+    save();
+    return true;
   }
   instance.update = update;
   /**
@@ -638,7 +521,228 @@ function createStorageList(appName, trackerName, listName, storageInstance, stor
   return instance;
 }
 /*</function>*/
-/*<function name="createStorage" depend="createStorageList">*/
+  /*<function name="createEmitter">*/
+  /**
+   * 创建事件对象
+   '''<example>'''
+   * @example base
+    ```js
+    var emitter = app.createEmitter();
+    emitter.on('click', function (data) {
+      console.log('on', data);
+    });
+    emitter.once('click', function (data) {
+      console.log('once', data);
+    });
+    function bee(data) {
+      console.log('bee', data);
+    }
+    emitter.on('click', bee);
+    emitter.on('click2', function (data) {
+      console.log('on', data);
+    });
+    emitter.emit('click2', 'hello 1');
+    // > on hello 1
+    emitter.emit('click', 'hello 1');
+    // > on hello 1
+    // > once hello 1
+    // > bee hello 1
+    emitter.emit('click', 'hello 2');
+    // > on hello 2
+    // > bee hello 2
+    emitter.off('click', bee);
+    emitter.emit('click', 'hello 3');
+    // > on hello 3
+    ```
+   '''</example>'''
+   */
+  function createEmitter() {
+    /**
+     * 事件对象实例
+     *
+     * @type {Object}
+     */
+    var instance = {};
+    /**
+     * 事件列表
+     *
+     * @type {Array}
+     * @param {string} item.event 事件名
+     * @param {Function} item.fn 回调函数
+     */
+    var callbacks = [];
+    /**
+     * 事件绑定
+     *
+     * @param {string} event 事件名
+     * @param {Function} fn 回调函数
+     * @return {Object} 返回事件实例
+     */
+    function on(event, fn) {
+      callbacks.push({
+        event: event,
+        fn: fn
+      });
+      return instance;
+    }
+    instance.on = on;
+    /**
+     * 取消事件绑定
+     *
+     * @param {string} event 事件名
+     * @param {Function} fn 回调函数
+     * @return {Object} 返回事件实例
+     */
+    function off(event, fn) {
+      callbacks = callbacks.filter(function (item) {
+        return !(item.event === event && item.fn === fn);
+      });
+      return instance;
+    }
+    instance.off = off;
+    /**
+     * 事件绑定，只触发一次
+     *
+     * @param {string} event 事件名
+     * @param {Function} fn 回调函数
+     * @return {Object} 返回事件实例
+     */
+    function once(event, fn) {
+      function handler() {
+        off(event, handler);
+        fn.apply(instance, arguments);
+      }
+      on(event, handler);
+      return instance;
+    }
+    instance.once = once;
+    /**
+     * 触发事件
+     *
+     * @param {string} event 事件名
+     * @param {Function} fn 回调函数
+     * @return {Object} 返回事件实例
+     */
+    function emit(event) {
+      var argv = [].slice.call(arguments, 1);
+      callbacks.filter(function (item) {
+        return item.event === event;
+      }).forEach(function (item) {
+        item.fn.apply(instance, argv);
+      });
+      return instance;
+    }
+    instance.emit = emit;
+    return instance;
+  }
+  /*</function>*/
+/*<function name="createStorageSender" depend="createStorageList">*/
+/**
+ * 创建发送器
+ *
+   '''<example>'''
+   * @example createStorageSender():base
+    ```js
+    var storageList = app.createStorageList('h5t', 'sender', 'send');
+    storageList.push({
+      accept: 'http://host/path/to',
+      query: 'level=info&message=click%20button1'
+    });
+    app.createStorageSender();
+    setTimeout(function(){
+      console.log(localStorage['h5t@storageList/h5t/sender/send']);
+      // > []
+      //done();
+    }, 1100);
+    ```
+   '''</example>'''
+ */
+function createStorageSender() {
+  var instance = {};
+  var storageSends;
+  var storageListDict = {};
+  var timer;
+  function scan(delay) {
+    delay = delay || 0;
+    console.log('scan delay: %d', delay);
+    if (timer) {
+      clearTimeout(timer);
+    }
+    timer = setTimeout(function() {
+      timer = null;
+      storageSends = [];
+      Object.keys(localStorage).forEach(function(key) {
+        var match = key.match(/^h5t@storageList\/(\w+)\/(\w+)\/send$/);
+        if (match) {
+          var appName = match[1];
+          var trackerName = match[2];
+          var storageListSend = storageListDict[[appName, trackerName]];
+          if (!storageListSend) {
+            storageListDict[[appName, trackerName]] =
+              storageListSend =
+              createStorageList(appName, trackerName, 'send');
+          }
+          var list = storageListSend.toArray();
+          list.forEach(function(item) {
+            item.storageDict = [appName, trackerName].toString();
+          });
+          storageSends = storageSends.concat(list);
+        }
+      });
+      if (storageSends.length <= 0) {
+        return;
+      }
+      // 发送策略，优先尝试次数少的，再次创建最近的
+      storageSends.sort(function(a, b) {
+        if (a.tried === b.tried) {
+          return b.birthday - a.birthday;
+        } else {
+          return a.tried - b.tried;
+        }
+      });
+      // console.log(JSON.stringify(storageSends, null, '  '));
+      var item = storageSends.shift();
+      console.log(item);
+      // 更新发送尝试次数
+      storageListDict[item.storageDict].update(item.id, {
+        tried: (item.tried || 0) + 1
+      });
+      if (!item.data.accept) {
+        console.error('accept is undefined.');
+        return;
+      }
+      var img = document.createElement('img');
+      img.onload = function() {
+        storageListDict[item.storageDict].remove(item.id);
+        delete instance[item.id];
+        scan(1000); // 发送成功 // 一秒后扫描
+      };
+      img.onerror = function() {
+        delete instance[item.id];
+        scan(60 * 1000); // 发送失败 // 一分钟后扫描
+      };
+      // accept = 'host/path/to.gif'
+      // accept = 'host/path/to.gif?from=qq'
+      var match = item.data.accept.match(/^([^?]+)(?:\?(.*))?$/);
+      var path = match[1];
+      var query = match[2];
+      var url;
+      if (item.data.acceptStyle === 'path') {
+        url = path + (/\/$/.test(path) ? '' : '/') + item.data.query.replace(/[&=]/g, '/') + (query ? '?' + query : '');
+      } else {
+        url = path + '?' + item.data.query + (query ? '&' + query : '');
+      }
+      console.log(url);
+      img.src = url;
+      instance[item.id] = img;
+    }, delay);
+  }
+  instance.scan = scan;
+  return instance;
+};
+/*</function>*/
+/*<function name="createStorage" depend="createStorageList,createEmitter,createStorageSender">*/
+var storageSender = createStorageSender();
 /**
  * 创建存储器
  *
@@ -647,9 +751,10 @@ function createStorageList(appName, trackerName, listName, storageInstance, stor
  * @return {Object} 返回存储器
  */
 function createStorage(appName, trackerName) {
-  var instance = {};
+  var instance = createEmitter();
   var storageListSend = createStorageList(appName, trackerName, 'send');
   var storageListLog = createStorageList(appName, trackerName, 'log');
+  storageSender.scan();
   /**
    * 记录日志
    *
@@ -657,6 +762,7 @@ function createStorage(appName, trackerName) {
    * @return {string} 返回记录 ID
    */
   function log(data) {
+    storageListLog.clean();
     return storageListLog.push(data);
   }
   instance.log = log;
@@ -708,60 +814,15 @@ function createStorage(appName, trackerName) {
    '''</example>'''
    */
   function send(data, accept, acceptStyle) {
+    storageListSend.clean();
     var id = storageListSend.push({
       accept: accept,
       acceptStyle: acceptStyle, // 发送格式 "path" | "query"
       query: queryFrom(data),
     });
-    scan();
+    storageSender.scan();
   }
   instance.send = send;
-  /**
-   * 清除过期数据
-   *
-   '''<example>'''
-   * @example scan():base
-    ```js
-    var storage = app.createStorage('h5t_scan');
-    storage.send({
-      hisType: 'pageview'
-    }, '/host/path/to/t.gif');
-    ```
-   '''</example>'''
-  */
-  function scan() {
-    storageListLog.clean();
-    storageListSend.clean();
-    // acceptStyle = 'path';
-    // acceptStyle = 'query';
-    var item = storageListSend.toArray().pop();
-    if (item) {
-      var img = document.createElement('img');
-      img.onload = function () {
-        storageListSend.remove(item.id);
-        delete instance[item.id];
-        setTimeout(function () {
-          scan();
-        }, 1000);
-      };
-      // accept = 'host/path/to.gif'
-      // accept = 'host/path/to.gif?from=qq'
-      var match = item.data.accept.match(/^([^?]+)(?:\?(.*))?$/);
-      var path = match[0];
-      var query = match[1];
-      var url;
-      if (item.data.acceptStyle === 'path') {
-        url = path + (/\/$/.test(path) ? '' : '/') + item.data.query.replace(/[&=]/g, '/') + (query ? '?' + query : '');
-      } else {
-        url = path + '?' + item.data.query + (query ? '&' + query : '');
-      }
-      img.src = url;
-      // var accept = item.data.accept;
-      // img.src = accept + (accept.indexOf('?') < 0 ? '?' : '&') + item.data.query;
-      instance[item.id] = img;
-    }
-  }
-  instance.scan = scan;
   return instance;
 }
 /*</function>*/
@@ -814,108 +875,7 @@ function createStorage(appName, trackerName) {
     };
   }
   /*</function>*/
-/*<function name="createStorageSender" depend="createStorageList">*/
-/**
- * 创建发送器
- *
-   '''<example>'''
-   * @example createStorageSender():base
-    ```js
-    var storageList = app.createStorageList('h5t', 'sender', 'send');
-    storageList.push({
-      accept: 'http://host/path/to',
-      query: 'level=info&message=click%20button1'
-    });
-    app.createStorageSender();
-    setTimeout(function(){
-      console.log(localStorage['h5t@storageList/h5t/sender/send']);
-      // > []
-      //done();
-    }, 1100);
-    ```
-   '''</example>'''
- */
-var createStorageSender = function() {
-  var instance = {};
-  var storageSends;
-  var StorageListDict = {};
-  var timer;
-  send();
-  function send(delay) {
-    delay = delay || 0;
-    if (timer) {
-      clearTimeout(timer);
-    }
-    storageSends = [];
-    timer = setTimeout(function() {
-      timer = null;
-      Object.keys(localStorage).forEach(function(key) {
-        var match = key.match(/^h5t@storageList\/(\w+)\/(\w+)\/send$/);
-        if (match) {
-          var appName = match[1];
-          var trackerName = match[2];
-          var storageListSend = StorageListDict[[appName, trackerName]];
-          if (!storageListSend) {
-            StorageListDict[[appName, trackerName]] =
-              storageListSend =
-              createStorageList(appName, trackerName, 'send');
-            var list = storageListSend.toArray();
-            list.forEach(function(item) {
-              item.StorageDict = [appName, trackerName].toString();
-            });
-          }
-          storageSends = storageSends.concat(list);
-        }
-      });
-      // 发送策略，优先尝试次数少的，再次创建最近的
-      storageSends.sort(function(a, b) {
-        if (a.tried === b.tried) {
-          return b.birthday - a.birthday;
-        } else {
-          return a.tried - b.tried;
-        }
-      });
-      var item = storageSends.shift();
-      if (!item) {
-        return;
-      }
-      // 更新发送尝试次数
-      StorageListDict[item.StorageDict].update(item.id, {
-        tried: ++item.tried
-      });
-      if (!item.data.accept) {
-        console.error('accept is undefined.');
-        return;
-      }
-      var img = document.createElement('img');
-      img.onload = function() {
-        StorageListDict[item.StorageDict].remove(item.id);
-        delete instance[item.id];
-        send(1000);
-      };
-      img.onerror = function() {
-        delete instance[item.id];
-        send(60 * 1000);
-      };
-      // accept = 'host/path/to.gif'
-      // accept = 'host/path/to.gif?from=qq'
-      var match = item.data.accept.match(/^([^?]+)(?:\?(.*))?$/);
-      var path = match[0];
-      var query = match[1];
-      var url;
-      if (item.data.acceptStyle === 'path') {
-        url = path + (/\/$/.test(path) ? '' : '/') + item.data.query.replace(/[&=]/g, '/') + (query ? '?' + query : '');
-      } else {
-        url = path + '?' + item.data.query + (query ? '&' + query : '');
-      }
-      img.src = url;
-      instance[item.id] = img;
-    }, delay);
-  }
-  instance.send = send;
-};
-/*</function>*/
-/*<function name="createTracker" depend="createEmitter,createGetter,createSetter,createStorage">*/
+/*<function name="createTracker" depend="createEmitter,createGetter,createSetter,createStorage,newGuid">*/
 /**
  * 创建追踪器
  *
@@ -1068,7 +1028,9 @@ function createTracker(appName, trackerName) {
       return;
     }
     // merge data
-    var item = {};
+    var item = {
+      id: newGuid()
+    };
     if (options.data) {
       Object.keys(options.data).forEach(function (key) {
         item[key] = options.data[key];
@@ -1361,9 +1323,6 @@ function createApp(appName) {
     userId = localStorage[storageKeys.userId] = newGuid();
   }
   var instance = createTracker('main');
-  instance.set({
-    user: userId
-  });
   instance.createEmitter = createEmitter;
   instance.createStorage = createStorage;
   instance.createStorageList = createStorageList;
@@ -1373,6 +1332,9 @@ function createApp(appName) {
   instance.createApp = createApp;
   instance.createSessionManager = createSessionManager;
   instance.createStorageSender = createStorageSender;
+  instance.set({
+    user: userId
+  });
   trackers[instance.name] = instance;
   var sessionManager = createSessionManager();
   sessionManager.on('createSession', function () {

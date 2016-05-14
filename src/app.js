@@ -58,12 +58,7 @@ function createApp(appName) {
   if (!userId) {
     userId = localStorage[storageKeys.userId] = newGuid();
   }
-
   var instance = createTracker('main');
-  instance.set({
-    user: userId
-  });
-
   instance.createEmitter = createEmitter;
   instance.createStorage = createStorage;
   instance.createStorageList = createStorageList;
@@ -74,6 +69,9 @@ function createApp(appName) {
   instance.createSessionManager = createSessionManager;
   instance.createStorageSender = createStorageSender;
 
+  instance.set({
+    user: userId
+  });
   trackers[instance.name] = instance;
 
   var sessionManager = createSessionManager();

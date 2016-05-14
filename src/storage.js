@@ -2,7 +2,17 @@
 var createStorageList = require('./storage-list').createStorageList;
 /*</jdists>*/
 
-/*<function name="createStorage" depend="createStorageList">*/
+/*<jdists encoding="fndep" import="./event.js" depend="createEmitter">*/
+var createEmitter = require('./event').createEmitter;
+/*</jdists>*/
+
+/*<jdists encoding="fndep" import="./storage-sender.js" depend="createStorageSender">*/
+var createStorageSender = require('./storage-sender').createStorageSender;
+/*</jdists>*/
+
+/*<function name="createStorage" depend="createStorageList,createEmitter,createStorageSender">*/
+var storageSender = createStorageSender();
+
 /**
  * 创建存储器
  *
@@ -12,10 +22,11 @@ var createStorageList = require('./storage-list').createStorageList;
  */
 function createStorage(appName, trackerName) {
 
-  var instance = {};
+  var instance = createEmitter();
 
   var storageListSend = createStorageList(appName, trackerName, 'send');
   var storageListLog = createStorageList(appName, trackerName, 'log');
+  storageSender.scan();
 
   /**
    * 记录日志
@@ -24,6 +35,8 @@ function createStorage(appName, trackerName) {
    * @return {string} 返回记录 ID
    */
   function log(data) {
+    storageListLog.clean();
+
     return storageListLog.push(data);
   }
   instance.log = log;
@@ -82,65 +95,15 @@ function createStorage(appName, trackerName) {
    '''</example>'''
    */
   function send(data, accept, acceptStyle) {
+    storageListSend.clean();
     var id = storageListSend.push({
       accept: accept,
       acceptStyle: acceptStyle, // 发送格式 "path" | "query"
       query: queryFrom(data),
     });
-    scan();
+    storageSender.scan();
   }
   instance.send = send;
-
-  /**
-   * 清除过期数据
-   *
-   '''<example>'''
-   * @example scan():base
-    ```js
-    var storage = app.createStorage('h5t_scan');
-    storage.send({
-      hisType: 'pageview'
-    }, '/host/path/to/t.gif');
-    ```
-   '''</example>'''
-  */
-  function scan() {
-    storageListLog.clean();
-    storageListSend.clean();
-
-    // acceptStyle = 'path';
-    // acceptStyle = 'query';
-
-    var item = storageListSend.toArray().pop();
-    if (item) {
-      var img = document.createElement('img');
-      img.onload = function () {
-        storageListSend.remove(item.id);
-        delete instance[item.id];
-
-        setTimeout(function () {
-          scan();
-        }, 1000);
-      };
-      // accept = 'host/path/to.gif'
-      // accept = 'host/path/to.gif?from=qq'
-      var match = item.data.accept.match(/^([^?]+)(?:\?(.*))?$/);
-      var path = match[0];
-      var query = match[1];
-      var url;
-      if (item.data.acceptStyle === 'path') {
-        url = path + (/\/$/.test(path) ? '' : '/') + item.data.query.replace(/[&=]/g, '/') + (query ? '?' + query : '');
-      } else {
-        url = path + '?' + item.data.query + (query ? '&' + query : '');
-      }
-      img.src = url;
-
-      // var accept = item.data.accept;
-      // img.src = accept + (accept.indexOf('?') < 0 ? '?' : '&') + item.data.query;
-      instance[item.id] = img;
-    }
-  }
-  instance.scan = scan;
 
   return instance;
 }

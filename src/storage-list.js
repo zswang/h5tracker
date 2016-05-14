@@ -318,16 +318,14 @@ function createStorageList(appName, trackerName, listName, storageInstance, stor
    */
   function update(id, item) {
     var data = instance.get(id);
-    if (data) {
-      Object.keys(data).forEach(function(key) {
-        if (item[key]) {
-          data[key] = item[key];
-        }
-      });
-      save();
-      return true;
+    if (!data) {
+      return;
     }
-    return false;
+    Object.keys(item).forEach(function(key) {
+      data[key] = item[key];
+    });
+    save();
+    return true;
   }
   instance.update = update;
 

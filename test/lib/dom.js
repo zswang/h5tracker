@@ -99,7 +99,7 @@ class HTMLImage extends HTMLElement {
     this._src = value;
     var self = this;
     setTimeout(function () {
-      if (value === '#error') {
+      if (/#error/.test(value)) {
         self.dispatchEvent('error');
       } else {
         self.dispatchEvent('load');

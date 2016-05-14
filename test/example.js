@@ -226,6 +226,49 @@ describe("./src/storage-list.js", function () {
     print(data[0].id === id2);
     assert.equal(printLines.join("\n"), "true"); printLines = [];
     });
+ it("update():base", function() {
+ printLines = [];
+    var storageList = app.createStorageList('h5t', 'update', 'send');
+    var id1 = storageList.push({
+      level: 'info',
+      message: 'click button1'
+    });
+    storageList.update(id1, {
+      tried: 2
+    });
+    var data = JSON.parse(localStorage['h5t@storageList/h5t/update/send']);
+    print(data[0].tried === 2);
+    assert.equal(printLines.join("\n"), "true"); printLines = [];
+    });
+ it("get():base", function() {
+ printLines = [];
+    var storageList = app.createStorageList('h5t', 'get', 'send');
+    var id1 = storageList.push({
+      level: 'info',
+      message: 'click button1'
+    });
+    var item = storageList.get(id1);
+    var data = JSON.parse(localStorage['h5t@storageList/h5t/get/send']);
+    print(item.id === id1);
+    assert.equal(printLines.join("\n"), "true"); printLines = [];
+    });
+});
+describe("./src/storage-sender.js", function () {
+  this.timeout(5000);
+  printLines = []; it("createStorageSender():base", function(done) {
+ printLines = [];
+    var storageList = app.createStorageList('h5t', 'sender', 'send');
+    storageList.push({
+      accept: 'http://host/path/to',
+      query: 'level=info&message=click%20button1'
+    });
+    app.createStorageSender();
+    setTimeout(function(){
+      print(localStorage['h5t@storageList/h5t/sender/send']);
+      assert.equal(printLines.join("\n"), "[]"); printLines = [];
+      done();
+    }, 1100);
+    });
 });
 describe("./src/storage.js", function () {
   this.timeout(5000);

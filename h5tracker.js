@@ -6,8 +6,8 @@
    * @author
    *   zswang (http://weibo.com/zswang)
    *   meglad (https://github.com/meglad)
-   * @version 0.0.68
-   * @date 2016-05-13
+   * @version 0.0.111
+   * @date 2016-05-14
    */
   var objectName = window.h5tObjectName || 'h5t';
   var oldObject = window[objectName];
@@ -54,6 +54,101 @@
     return result;
   }
   /*</function>*/
+  /*<function name="createGetter" depend="camelCase">*/
+  /**
+   * 创建读取键值的方法
+   *
+   * @param {Object} target 目标对象
+   * @param {Function} getter 读取一个键值函数
+   *  getter -> function(name, fn)
+   '''<example>'''
+   * @example createGetter():base
+    ```js
+    var dict = { a: 1, b: 2, c: 3 };
+    var food = {};
+    food.get = jsets.createGetter(food, function(name) {
+        return dict[name];
+    });
+    console.log(JSON.stringify(food.get('a')));
+    // > 1
+    food.get('a', function(a) {
+      console.log(JSON.stringify(a));
+      // > 1
+    });
+    food.get(function(c, b, a) {
+      console.log(JSON.stringify([a, b, c]));
+      // > [1,2,3]
+    });
+    food.get(['a', 'b'], function(a, b) {
+        console.log(JSON.stringify(a));
+        // > 1
+        console.log(JSON.stringify(b));
+        // > 2
+    });
+    console.log(JSON.stringify(food.get(['a', 'b'])));
+    // > {"a":1,"b":2}
+    ```
+    '''</example>'''
+   */
+  function createGetter(target, getter, camel) {
+    var method = function (name, fn) {
+      var result;
+      var keys;
+      if (typeof name === 'function') {
+        keys = name['-jsets-params'];
+        if (!keys) { // 优先从缓存中获取
+          keys = [];
+          String(name).replace(/\(\s*([^()]+?)\s*\)/,
+            function (all, names) {
+              keys = names.split(/\s*,\s*/);
+            }
+          );
+          name['-jsets-params'] = keys;
+        }
+        return method(keys, name);
+      }
+      if (typeof name === 'string' || typeof name === 'number') {
+        name = camel ? camelCase(name) : name;
+        if (typeof fn === 'function') {
+          fn.call(target, getter(name));
+          return target;
+        }
+        return getter(name);
+      }
+      if (typeof name === 'object') {
+        if (name instanceof Array) {
+          if (typeof fn === 'function') {
+            result = [];
+            name.forEach(function (n) {
+              result.push(getter(camel ? camelCase(n) : n));
+            });
+            fn.apply(target, result);
+            return target;
+          }
+          result = {};
+          name.forEach(function (n) {
+            result[n] = getter(camel ? camelCase(n) : n);
+          });
+          return result;
+        }
+        var key;
+        if (typeof fn === 'function') {
+          result = [];
+          for (key in name) {
+            result.push(getter(camel ? camelCase(key) : key) || name[key]);
+          }
+          return target;
+        }
+        result = {};
+        for (key in name) {
+          result[key] = getter(camel ? camelCase(key) : key) || name[key];
+        }
+        return result;
+      }
+    };
+    return method;
+  }
+  /*</function>*/
 /*<function name="storageKeys">*/
 var storageKeys = (function () {
   var prefix = 'h5t@';
@@ -67,6 +162,34 @@ var storageKeys = (function () {
     storageListTS: prefix + 'storageList/#{app}/#{tracker}/#{name}/ts',
   };
 })();
+/*</function>*/
+/*<function name="newGuid">*/
+/**
+ * 比较大的概率上，生成唯一 ID
+ *
+ * @return {string} 返回生成的 ID
+ *
+ '''<example>'''
+ * @example newGuid:base
+  ```js
+  console.log(/^[a-z0-9]+$/.test(app.newGuid()));
+  // > true
+  ```
+ '''</example>'''
+ */
+var newGuid = (function() {
+  var guid = parseInt(Math.random() * 36);
+  return function newGuid() {
+    return Date.now().toString(36) + (guid++ % 36).toString(36) + Math.random().toString(36).slice(2, 4);
+  }
+})();
+/*</function>*/
+/*<function name="format">*/
+function format(template, json) {
+  return template.replace(/#\{(.*?)\}/g, function(all, key) {
+    return json && (key in json) ? json[key] : "";
+  });
+}
 /*</function>*/
   /*<function name="createEmitter">*/
   /**
@@ -183,130 +306,7 @@ var storageKeys = (function () {
     return instance;
   }
   /*</function>*/
-/*<function name="newGuid">*/
-/**
- * 比较大的概率上，生成唯一 ID
- *
- * @return {string} 返回生成的 ID
- *
- '''<example>'''
- * @example newGuid:base
-  ```js
-  console.log(/^[a-z0-9]+$/.test(app.newGuid()));
-  // > true
-  ```
- '''</example>'''
- */
-var newGuid = (function() {
-  var guid = parseInt(Math.random() * 36);
-  return function newGuid() {
-    return Date.now().toString(36) + (guid++ % 36).toString(36) + Math.random().toString(36).slice(2, 4);
-  }
-})();
-/*</function>*/
-/*<function name="format">*/
-function format(template, json) {
-  return template.replace(/#\{(.*?)\}/g, function(all, key) {
-    return json && (key in json) ? json[key] : "";
-  });
-}
-/*</function>*/
-  /*<function name="createGetter" depend="camelCase">*/
-  /**
-   * 创建读取键值的方法
-   *
-   * @param {Object} target 目标对象
-   * @param {Function} getter 读取一个键值函数
-   *  getter -> function(name, fn)
-   '''<example>'''
-   * @example createGetter():base
-    ```js
-    var dict = { a: 1, b: 2, c: 3 };
-    var food = {};
-    food.get = jsets.createGetter(food, function(name) {
-        return dict[name];
-    });
-    console.log(JSON.stringify(food.get('a')));
-    // > 1
-    food.get('a', function(a) {
-      console.log(JSON.stringify(a));
-      // > 1
-    });
-    food.get(function(c, b, a) {
-      console.log(JSON.stringify([a, b, c]));
-      // > [1,2,3]
-    });
-    food.get(['a', 'b'], function(a, b) {
-        console.log(JSON.stringify(a));
-        // > 1
-        console.log(JSON.stringify(b));
-        // > 2
-    });
-    console.log(JSON.stringify(food.get(['a', 'b'])));
-    // > {"a":1,"b":2}
-    ```
-    '''</example>'''
-   */
-  function createGetter(target, getter, camel) {
-    var method = function (name, fn) {
-      var result;
-      var keys;
-      if (typeof name === 'function') {
-        keys = name['-jsets-params'];
-        if (!keys) { // 优先从缓存中获取
-          keys = [];
-          String(name).replace(/\(\s*([^()]+?)\s*\)/,
-            function (all, names) {
-              keys = names.split(/\s*,\s*/);
-            }
-          );
-          name['-jsets-params'] = keys;
-        }
-        return method(keys, name);
-      }
-      if (typeof name === 'string' || typeof name === 'number') {
-        name = camel ? camelCase(name) : name;
-        if (typeof fn === 'function') {
-          fn.call(target, getter(name));
-          return target;
-        }
-        return getter(name);
-      }
-      if (typeof name === 'object') {
-        if (name instanceof Array) {
-          if (typeof fn === 'function') {
-            result = [];
-            name.forEach(function (n) {
-              result.push(getter(camel ? camelCase(n) : n));
-            });
-            fn.apply(target, result);
-            return target;
-          }
-          result = {};
-          name.forEach(function (n) {
-            result[n] = getter(camel ? camelCase(n) : n);
-          });
-          return result;
-        }
-        var key;
-        if (typeof fn === 'function') {
-          result = [];
-          for (key in name) {
-            result.push(getter(camel ? camelCase(key) : key) || name[key]);
-          }
-          return target;
-        }
-        result = {};
-        for (key in name) {
-          result[key] = getter(camel ? camelCase(key) : key) || name[key];
-        }
-        return result;
-      }
-    };
-    return method;
-  }
-  /*</function>*/
-/*<function name="createStorageList" depend="newGuid,format,storageKeys">*/
+/*<function name="createStorageList" depend="newGuid,format,storageKeys,createGetter">*/
 /**
  * 创建存储列表
  *
@@ -381,7 +381,7 @@ function createStorageList(appName, trackerName, listName, storageInstance, stor
     if (!list) {
       try {
         list = JSON.parse(storageInstance[storageListKey] || '[]');
-      } catch(ex) {
+      } catch (ex) {
         list = [];
       }
     }
@@ -428,6 +428,7 @@ function createStorageList(appName, trackerName, listName, storageInstance, stor
       id: id,
       birthday: birthday,
       expires: storageExpires,
+      tried: 0, // 尝试发送次数
       data: data
     });
     save();
@@ -509,7 +510,7 @@ function createStorageList(appName, trackerName, listName, storageInstance, stor
         return count;
       }
     }
-    list = list.filter(function (item) {
+    list = list.filter(function(item) {
       var expiresTime = item.birthday + item.expires * 1000;
       if (expiresTime < now) { // 已经过期
         count++;
@@ -554,7 +555,7 @@ function createStorageList(appName, trackerName, listName, storageInstance, stor
    */
   function remove(id) {
     load();
-    list = list.filter(function (item) {
+    list = list.filter(function(item) {
       if (id === item.id) {
         if (item.birthday + item.expires === minExpiresTime) {
           minExpiresTime = null;
@@ -566,6 +567,74 @@ function createStorageList(appName, trackerName, listName, storageInstance, stor
     save();
   }
   instance.remove = remove;
+  /**
+   * 更新数据
+   *
+   * @param {string} id 记录标识
+   * @param {Object} item 修改项
+   * @return {boolean} 返回是否修改成功
+   '''<example>'''
+   * @example update():base
+    ```js
+    var storageList = app.createStorageList('h5t', 'update', 'send');
+    var id1 = storageList.push({
+      level: 'info',
+      message: 'click button1'
+    });
+    storageList.update(id1, {
+      tried: 2
+    });
+    var data = JSON.parse(localStorage['h5t@storageList/h5t/update/send']);
+    console.log(data[0].tried === 2);
+    // > true
+    ```
+   '''</example>'''
+   */
+  function update(id, item) {
+    var data = instance.get(id);
+    if (data) {
+      Object.keys(data).forEach(function(key) {
+        if (item[key]) {
+          data[key] = item[key];
+        }
+      });
+      save();
+      return true;
+    }
+    return false;
+  }
+  instance.update = update;
+  /**
+   * 查询数据
+   *
+   * @param {string} id 记录标识
+   * @return {boolean} 返回记录数据
+   '''<example>'''
+   * @example get():base
+    ```js
+    var storageList = app.createStorageList('h5t', 'get', 'send');
+    var id1 = storageList.push({
+      level: 'info',
+      message: 'click button1'
+    });
+    var item = storageList.get(id1);
+    var data = JSON.parse(localStorage['h5t@storageList/h5t/get/send']);
+    console.log(item.id === id1);
+    // > true
+    ```
+   '''</example>'''
+   */
+  instance.get = createGetter(instance, function(id) {
+    load();
+    var result;
+    list.some(function(item) {
+      if (id === item.id) {
+        result = item;
+        return item;
+      }
+    });
+    return result;
+  }, true);
   return instance;
 }
 /*</function>*/
@@ -745,129 +814,106 @@ function createStorage(appName, trackerName) {
     };
   }
   /*</function>*/
-/*<function name="createSessionManager" depend="storageKeys,createEmitter,createGetter">*/
+/*<function name="createStorageSender" depend="createStorageList">*/
 /**
- * 创建 Session 管理器
+ * 创建发送器
  *
- * @param {Number} sessionExpires 过期时间 30 秒
- * @return {Object} 返回管理器会话实例
- '''<example>'''
- * @example createSessionManager():base
-  ```js
-  var sessionManager = app.createSessionManager();
-  var sessionId = sessionStorage['h5t@global/sessionId'];
-  var birthday = sessionStorage['h5t@global/sessionBirthday'];
-  var liveTime = sessionStorage['h5t@global/sessionLiveTime'];
-  console.log(!!sessionId && !!birthday && !!liveTime);
-  // > true
-  console.log(sessionId === sessionManager.get('id'));
-  // > true
-  console.log(birthday === sessionManager.get('birthday'));
-  // > true
-  console.log(liveTime === sessionManager.get('liveTime'));
-  // > true
-  ```
-  * @example createSessionManager():sessionExpires => 3
-  ```js
-  var timeout = 3;
-  var sessionManager = app.createSessionManager(timeout);
-  setTimeout(function(){
-    console.log(Date.now() - sessionManager.get('liveTime') > timeout * 1000);
-    // > true
-    //done();
-  }, 3500);
-  ```
- '''</example>'''
+   '''<example>'''
+   * @example createStorageSender():base
+    ```js
+    var storageList = app.createStorageList('h5t', 'sender', 'send');
+    storageList.push({
+      accept: 'http://host/path/to',
+      query: 'level=info&message=click%20button1'
+    });
+    app.createStorageSender();
+    setTimeout(function(){
+      console.log(localStorage['h5t@storageList/h5t/sender/send']);
+      // > []
+      //done();
+    }, 1100);
+    ```
+   '''</example>'''
  */
-function createSessionManager(sessionExpires) {
-  sessionExpires = sessionExpires || 30;
-  var instance = createEmitter();
-  var fieldsKey = {
-    id: storageKeys.sessionId,
-    birthday: storageKeys.sessionBirthday,
-    liveTime: storageKeys.sessionLiveTime,
-  };
-  instance.get = createGetter(instance, function (name) {
-    return sessionStorage[fieldsKey[name]];
-  }, true);
-  /**
-   * 创建 Session
-   '''<example>'''
-   * @example createSession():base
-    ```js
-    var sessionManager = app.createSessionManager();
-    var sessionId = sessionManager.get('id');
-    console.log(!!sessionId);
-    // > true
-    sessionManager.createSession();
-    console.log(!!sessionManager.get('id'));
-    // > true
-    console.log(sessionId != sessionManager.get('id'));
-    // > true
-    ```
-   '''</example>'''
-   */
-  function createSession() {
-    if (sessionStorage[storageKeys.sessionId]) {
-      instance.emit('destroySession');
-    }
-    var now = Date.now();
-    sessionStorage[storageKeys.sessionId] = newGuid();
-    sessionStorage[storageKeys.sessionBirthday] = now;
-    sessionStorage[storageKeys.sessionLiveTime] = now;
-    instance.emit('createSession');
-  }
-  instance.createSession = createSession;
-  /**
-   * 释放 Session
-   '''<example>'''
-   * @example destroySession():base
-    ```js
-    var sessionManager = app.createSessionManager();
-    console.log(!!sessionManager.get('id'));
-    // > true
-    sessionManager.destroySession();
-    console.log(!!sessionManager.get('id'));
-    // > false
-    ```
-   '''</example>'''
-   */
-  function destroySession() {
-    if (sessionStorage[storageKeys.sessionId]) {
-      delete sessionStorage[storageKeys.sessionId];
-      delete sessionStorage[storageKeys.sessionBirthday];
-      delete sessionStorage[storageKeys.sessionLiveTime];
-      instance.emit('destroySession');
-    }
-  }
-  instance.destroySession = destroySession;
-  if (!sessionStorage[storageKeys.sessionId]) {
-    createSession();
-  }
+var createStorageSender = function() {
+  var instance = {};
+  var storageSends;
+  var StorageListDict = {};
   var timer;
-  function inputHandler() {
+  send();
+  function send(delay) {
+    delay = delay || 0;
     if (timer) {
-      return;
+      clearTimeout(timer);
     }
-    var now = Date.now();
+    storageSends = [];
     timer = setTimeout(function() {
-      if (Date.now() - sessionStorage[storageKeys.liveTime] >= sessionExpires * 1000) {
-        createSession();
-      } else {
-        sessionStorage[storageKeys.sessionLiveTime] = liveTime;
-      }
       timer = null;
-    }, 1000);
+      Object.keys(localStorage).forEach(function(key) {
+        var match = key.match(/^h5t@storageList\/(\w+)\/(\w+)\/send$/);
+        if (match) {
+          var appName = match[1];
+          var trackerName = match[2];
+          var storageListSend = StorageListDict[[appName, trackerName]];
+          if (!storageListSend) {
+            StorageListDict[[appName, trackerName]] =
+              storageListSend =
+              createStorageList(appName, trackerName, 'send');
+            var list = storageListSend.toArray();
+            list.forEach(function(item) {
+              item.StorageDict = [appName, trackerName].toString();
+            });
+          }
+          storageSends = storageSends.concat(list);
+        }
+      });
+      // 发送策略，优先尝试次数少的，再次创建最近的
+      storageSends.sort(function(a, b) {
+        if (a.tried === b.tried) {
+          return b.birthday - a.birthday;
+        } else {
+          return a.tried - b.tried;
+        }
+      });
+      var item = storageSends.shift();
+      if (!item) {
+        return;
+      }
+      // 更新发送尝试次数
+      StorageListDict[item.StorageDict].update(item.id, {
+        tried: ++item.tried
+      });
+      if (!item.data.accept) {
+        console.error('accept is undefined.');
+        return;
+      }
+      var img = document.createElement('img');
+      img.onload = function() {
+        StorageListDict[item.StorageDict].remove(item.id);
+        delete instance[item.id];
+        send(1000);
+      };
+      img.onerror = function() {
+        delete instance[item.id];
+        send(60 * 1000);
+      };
+      // accept = 'host/path/to.gif'
+      // accept = 'host/path/to.gif?from=qq'
+      var match = item.data.accept.match(/^([^?]+)(?:\?(.*))?$/);
+      var path = match[0];
+      var query = match[1];
+      var url;
+      if (item.data.acceptStyle === 'path') {
+        url = path + (/\/$/.test(path) ? '' : '/') + item.data.query.replace(/[&=]/g, '/') + (query ? '?' + query : '');
+      } else {
+        url = path + '?' + item.data.query + (query ? '&' + query : '');
+      }
+      img.src = url;
+      instance[item.id] = img;
+    }, delay);
   }
-  [
-    'keydown', 'input', 'keyup',
-    'click', 'contextmenu', 'mousemove',
-    'touchstart', 'touchend', 'touchmove'
-  ].forEach(function(name) {
-    document.addEventListener(name, inputHandler, false);
-  });
-  return instance;
-}
+  instance.send = send;
+};
 /*</function>*/
 /*<function name="createTracker" depend="createEmitter,createGetter,createSetter,createStorage">*/
 /**
@@ -1158,7 +1204,131 @@ function createTracker(appName, trackerName) {
   return instance;
 }
 /*</function>*/
-/*<function name="createApp" depend="createEmitter,createTracker,newGuid,format,storageKeys,createSessionManager">*/
+/*<function name="createSessionManager" depend="storageKeys,createEmitter,createGetter">*/
+/**
+ * 创建 Session 管理器
+ *
+ * @param {Number} sessionExpires 过期时间 30 秒
+ * @return {Object} 返回管理器会话实例
+ '''<example>'''
+ * @example createSessionManager():base
+  ```js
+  var sessionManager = app.createSessionManager();
+  var sessionId = sessionStorage['h5t@global/sessionId'];
+  var birthday = sessionStorage['h5t@global/sessionBirthday'];
+  var liveTime = sessionStorage['h5t@global/sessionLiveTime'];
+  console.log(!!sessionId && !!birthday && !!liveTime);
+  // > true
+  console.log(sessionId === sessionManager.get('id'));
+  // > true
+  console.log(birthday === sessionManager.get('birthday'));
+  // > true
+  console.log(liveTime === sessionManager.get('liveTime'));
+  // > true
+  ```
+  * @example createSessionManager():sessionExpires => 3
+  ```js
+  var timeout = 3;
+  var sessionManager = app.createSessionManager(timeout);
+  setTimeout(function(){
+    console.log(Date.now() - sessionManager.get('liveTime') > timeout * 1000);
+    // > true
+    //done();
+  }, 3500);
+  ```
+ '''</example>'''
+ */
+function createSessionManager(sessionExpires) {
+  sessionExpires = sessionExpires || 30;
+  var instance = createEmitter();
+  var fieldsKey = {
+    id: storageKeys.sessionId,
+    birthday: storageKeys.sessionBirthday,
+    liveTime: storageKeys.sessionLiveTime,
+  };
+  instance.get = createGetter(instance, function (name) {
+    return sessionStorage[fieldsKey[name]];
+  }, true);
+  /**
+   * 创建 Session
+   '''<example>'''
+   * @example createSession():base
+    ```js
+    var sessionManager = app.createSessionManager();
+    var sessionId = sessionManager.get('id');
+    console.log(!!sessionId);
+    // > true
+    sessionManager.createSession();
+    console.log(!!sessionManager.get('id'));
+    // > true
+    console.log(sessionId != sessionManager.get('id'));
+    // > true
+    ```
+   '''</example>'''
+   */
+  function createSession() {
+    if (sessionStorage[storageKeys.sessionId]) {
+      instance.emit('destroySession');
+    }
+    var now = Date.now();
+    sessionStorage[storageKeys.sessionId] = newGuid();
+    sessionStorage[storageKeys.sessionBirthday] = now;
+    sessionStorage[storageKeys.sessionLiveTime] = now;
+    instance.emit('createSession');
+  }
+  instance.createSession = createSession;
+  /**
+   * 释放 Session
+   '''<example>'''
+   * @example destroySession():base
+    ```js
+    var sessionManager = app.createSessionManager();
+    console.log(!!sessionManager.get('id'));
+    // > true
+    sessionManager.destroySession();
+    console.log(!!sessionManager.get('id'));
+    // > false
+    ```
+   '''</example>'''
+   */
+  function destroySession() {
+    if (sessionStorage[storageKeys.sessionId]) {
+      delete sessionStorage[storageKeys.sessionId];
+      delete sessionStorage[storageKeys.sessionBirthday];
+      delete sessionStorage[storageKeys.sessionLiveTime];
+      instance.emit('destroySession');
+    }
+  }
+  instance.destroySession = destroySession;
+  if (!sessionStorage[storageKeys.sessionId]) {
+    createSession();
+  }
+  var timer;
+  function inputHandler() {
+    if (timer) {
+      return;
+    }
+    var now = Date.now();
+    timer = setTimeout(function() {
+      if (Date.now() - sessionStorage[storageKeys.liveTime] >= sessionExpires * 1000) {
+        createSession();
+      } else {
+        sessionStorage[storageKeys.sessionLiveTime] = liveTime;
+      }
+      timer = null;
+    }, 1000);
+  }
+  [
+    'keydown', 'input', 'keyup',
+    'click', 'contextmenu', 'mousemove',
+    'touchstart', 'touchend', 'touchmove'
+  ].forEach(function(name) {
+    document.addEventListener(name, inputHandler, false);
+  });
+  return instance;
+}
+/*</function>*/
+/*<function name="createApp" depend="createEmitter,createTracker,newGuid,format,storageKeys,createSessionManager,createStorageSender">*/
 /**
  * 追踪器实例
  *
@@ -1183,7 +1353,6 @@ var trackers = {};
  '''</example>'''
   */
 function createApp(appName) {
-  console.log('createApp() appName: %s', appName);
   var userId = localStorage[storageKeys.userId];
   if (!userId) {
     userId = localStorage[storageKeys.userId] = newGuid();
@@ -1200,6 +1369,7 @@ function createApp(appName) {
   instance.storageKeys = storageKeys;
   instance.createApp = createApp;
   instance.createSessionManager = createSessionManager;
+  instance.createStorageSender = createStorageSender;
   trackers[instance.name] = instance;
   var sessionManager = createSessionManager();
   sessionManager.on('createSession', function () {
@@ -1209,35 +1379,6 @@ function createApp(appName) {
     instance.emit('destroySession');
   });
   /*=== 生命周期 ===*/
-  /**
-   * session 创建的时间
-   *
-   * @type {number}
-   */
-  var sessionTime;
-  /**
-   * session ID
-   *
-   * @type {string}
-   */
-  var sessionId;
-  function start() {
-    sessionId = newGuid();
-    sessionTime = Date.now();
-    emit('start');
-  }
-  function resume() {
-    emit('resume');
-  }
-  function pause() {
-    emit('pasue');
-  }
-  function exit() {
-    emit('exit');
-  }
-  function config() {
-  }
-  instance.config = config;
   /**
    * 执行命令
    *

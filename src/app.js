@@ -19,8 +19,12 @@ var storageKeys = require('./storage-keys').storageKeys;
 var createSessionManager = require('./session-manager').createSessionManager;
 /*</jdists>*/
 
+/*<jdists encoding="fndep" import="./storage-sender.js" depend="createStorageSender">*/
+var createStorageSender = require('./storage-sender').createStorageSender;
+/*</jdists>*/
+
 /*=== 初始化 ===*/
-/*<function name="createApp" depend="createEmitter,createTracker,newGuid,format,storageKeys,createSessionManager">*/
+/*<function name="createApp" depend="createEmitter,createTracker,newGuid,format,storageKeys,createSessionManager,createStorageSender">*/
 /**
  * 追踪器实例
  *
@@ -68,6 +72,7 @@ function createApp(appName) {
   instance.storageKeys = storageKeys;
   instance.createApp = createApp;
   instance.createSessionManager = createSessionManager;
+  instance.createStorageSender = createStorageSender;
 
   trackers[instance.name] = instance;
 

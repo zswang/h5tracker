@@ -3,11 +3,15 @@ var newGuid = require('./common').newGuid;
 var format = require('./common').format;
 /*</jdists>*/
 
+/*<jdists encoding="fndep" import="../node_modules/jsets/jsets.js" depend="createGetter">*/
+var createGetter = require('jsets').createGetter;
+/*</jdists>*/
+
 /*<jdists encoding="fndep" import="./storage-keys.js" depend="storageKeys">*/
 var storageKeys = require('./storage-keys').storageKeys;
 /*</jdists>*/
 
-/*<function name="createStorageList" depend="newGuid,format,storageKeys">*/
+/*<function name="createStorageList" depend="newGuid,format,storageKeys,createGetter">*/
 /**
  * 创建存储列表
  *
@@ -87,7 +91,7 @@ function createStorageList(appName, trackerName, listName, storageInstance, stor
     if (!list) {
       try {
         list = JSON.parse(storageInstance[storageListKey] || '[]');
-      } catch(ex) {
+      } catch (ex) {
         list = [];
       }
     }
@@ -137,6 +141,7 @@ function createStorageList(appName, trackerName, listName, storageInstance, stor
       id: id,
       birthday: birthday,
       expires: storageExpires,
+      tried: 0, // 尝试发送次数
       data: data
     });
 
@@ -226,7 +231,7 @@ function createStorageList(appName, trackerName, listName, storageInstance, stor
       }
     }
 
-    list = list.filter(function (item) {
+    list = list.filter(function(item) {
       var expiresTime = item.birthday + item.expires * 1000;
       if (expiresTime < now) { // 已经过期
         count++;
@@ -274,7 +279,7 @@ function createStorageList(appName, trackerName, listName, storageInstance, stor
   function remove(id) {
     load();
 
-    list = list.filter(function (item) {
+    list = list.filter(function(item) {
       if (id === item.id) {
         if (item.birthday + item.expires === minExpiresTime) {
           minExpiresTime = null;
@@ -287,6 +292,77 @@ function createStorageList(appName, trackerName, listName, storageInstance, stor
     save();
   }
   instance.remove = remove;
+
+  /**
+   * 更新数据
+   *
+   * @param {string} id 记录标识
+   * @param {Object} item 修改项
+   * @return {boolean} 返回是否修改成功
+   '''<example>'''
+   * @example update():base
+    ```js
+    var storageList = app.createStorageList('h5t', 'update', 'send');
+    var id1 = storageList.push({
+      level: 'info',
+      message: 'click button1'
+    });
+    storageList.update(id1, {
+      tried: 2
+    });
+    var data = JSON.parse(localStorage['h5t@storageList/h5t/update/send']);
+    console.log(data[0].tried === 2);
+    // > true
+    ```
+   '''</example>'''
+   */
+  function update(id, item) {
+    var data = instance.get(id);
+    if (data) {
+      Object.keys(data).forEach(function(key) {
+        if (item[key]) {
+          data[key] = item[key];
+        }
+      });
+      save();
+      return true;
+    }
+    return false;
+  }
+  instance.update = update;
+
+  /**
+   * 查询数据
+   *
+   * @param {string} id 记录标识
+   * @return {boolean} 返回记录数据
+   '''<example>'''
+   * @example get():base
+    ```js
+    var storageList = app.createStorageList('h5t', 'get', 'send');
+    var id1 = storageList.push({
+      level: 'info',
+      message: 'click button1'
+    });
+    var item = storageList.get(id1);
+    var data = JSON.parse(localStorage['h5t@storageList/h5t/get/send']);
+    console.log(item.id === id1);
+    // > true
+    ```
+   '''</example>'''
+   */
+  instance.get = createGetter(instance, function(id) {
+    load();
+    var result;
+    list.some(function(item) {
+      if (id === item.id) {
+        result = item;
+        return item;
+      }
+    });
+    return result;
+  }, true);
+
 
   return instance;
 }

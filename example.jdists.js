@@ -11,7 +11,7 @@ var app = window.h5t.app;
 
 var util = require('util');
 
-var printLines = [];
+var printLines;
 function print() {
   printLines.push(util.format.apply(util, arguments));
 }
@@ -24,7 +24,6 @@ function print() {
 forEach(function (item) {
 !#{'describe("' + item + '", function () {'}
 !#{'  this.timeout(5000);'}
-!#{'  printLines = [];'}
   <!~jdists import="#{item}?example*" /~>
 !#{'});'}
 });
@@ -32,11 +31,11 @@ forEach(function (item) {
 
 /*<jdists export="#replacer">*/
 function (content) {
-  return content.replace(/\s*\*(\s*)@example\s+(.*)\n\s*```js([^]*?)```/g,
+  return content.replace(/(\s*)\*\s*@example\s+(.*)\n\s*```js([^]*?)\s*```/g,
     function (all, space, desc, code) {
       var hasDone = code.indexOf('//done();') >= 0;
-      var result = space + 'it(' + JSON.stringify(desc) + ', function(' + (hasDone ? 'done': '') + ') {\n';
-      result += space + 'printLines = [];';
+      var result = '\n  it(' + JSON.stringify(desc) + ', function(' + (hasDone ? 'done': '') + ') {\n';
+      result += '    printLines = [];';
       result += code.replace(/^(\s*\/\/ > .*\n??)+/mg, function (all) {
         var space = all.match(/^(\s*)\/\/ > /)[1];
         var output = all.replace(/^\s*\/\/ > /mg, '');
@@ -45,7 +44,7 @@ function (content) {
       .replace(/console\.log/g, 'print')
       .replace('//done();', 'done();');
 
-      result += '});\n';
+      result += '\n  });\n';
       return result;
     }
   );

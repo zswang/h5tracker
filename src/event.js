@@ -1,3 +1,5 @@
+(function () {
+
   /*<function name="createEmitter">*/
   /**
    * 创建事件对象
@@ -125,3 +127,5 @@
   /*</function>*/
 
   exports.createEmitter = createEmitter;
+
+})();

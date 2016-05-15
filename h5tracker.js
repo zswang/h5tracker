@@ -6,8 +6,8 @@
    * @author
    *   zswang (http://weibo.com/zswang)
    *   meglad (https://github.com/meglad)
-   * @version 0.0.111
-   * @date 2016-05-14
+   * @version 0.0.115
+   * @date 2016-05-16
    */
   var objectName = window.h5tObjectName || 'h5t';
   var oldObject = window[objectName];
@@ -648,7 +648,8 @@ function createStorageList(appName, trackerName, listName, storageInstance, stor
       accept: 'http://host/path/to',
       query: 'level=info&message=click%20button1'
     });
-    app.createStorageSender();
+    var sender = app.createStorageSender();
+    sender.scan();
     setTimeout(function(){
       console.log(localStorage['h5t@storageList/h5t/sender/send']);
       // > []
@@ -664,7 +665,6 @@ function createStorageSender() {
   var timer;
   function scan(delay) {
     delay = delay || 0;
-    console.log('scan delay: %d', delay);
     if (timer) {
       clearTimeout(timer);
     }
@@ -702,7 +702,6 @@ function createStorageSender() {
       });
       // console.log(JSON.stringify(storageSends, null, '  '));
       var item = storageSends.shift();
-      console.log(item);
       // 更新发送尝试次数
       storageListDict[item.storageDict].update(item.id, {
         tried: (item.tried || 0) + 1
@@ -732,7 +731,6 @@ function createStorageSender() {
       } else {
         url = path + '?' + item.data.query + (query ? '&' + query : '');
       }
-      console.log(url);
       img.src = url;
       instance[item.id] = img;
     }, delay);
@@ -792,7 +790,7 @@ function createStorage(appName, trackerName) {
    * @example send():base
     ```js
     var storage = app.createStorage('h5t', 'scan');
-    storage.send({
+    var id = storage.send({
       hisType: 'pageview'
     }, '/host/path/to/t.gif');
     var data = JSON.parse(localStorage['h5t@storageList/h5t/scan/send']);
@@ -800,6 +798,8 @@ function createStorage(appName, trackerName) {
     // > /host/path/to/t.gif
     console.log(data[0].data.query);
     // > hisType=pageview
+    console.log(id === data[0].id);
+    // > true
     ```
    * @example send():acceptStyle
     ```js
@@ -821,6 +821,7 @@ function createStorage(appName, trackerName) {
       query: queryFrom(data),
     });
     storageSender.scan();
+    return id;
   }
   instance.send = send;
   return instance;
@@ -991,10 +992,14 @@ function createTracker(appName, trackerName) {
     var tracker = app.createTracker('h5t', 'send_case_1');
     tracker.set({
       x: 1,
-      y: 2
+      y: 2,
+      id: null
     });
     tracker.send({z: 3});
-    tracker.send({z: null});
+    tracker.send({
+      z: null,
+      id: null
+    });
     tracker.create({
       accept: '/host/case1',
       data: {
@@ -1315,9 +1320,6 @@ var trackers = {};
  '''</example>'''
   */
 function createApp(appName) {
-  /*<remove trigger="release">*/
-  console.log('createApp() appName: %s', appName);
-  /*</remove>*/
   var userId = localStorage[storageKeys.userId];
   if (!userId) {
     userId = localStorage[storageKeys.userId] = newGuid();

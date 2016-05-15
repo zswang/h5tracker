@@ -4,7 +4,7 @@ global.window = dom.window;
 global.document = dom.document;
 global.localStorage = dom.localStorage;
 global.sessionStorage = dom.sessionStorage;
-require('../.');
+require('../src/index.js');
 var app = window.h5t.app;
 var util = require('util');
 var printLines = [];
@@ -262,7 +262,8 @@ describe("./src/storage-sender.js", function () {
       accept: 'http://host/path/to',
       query: 'level=info&message=click%20button1'
     });
-    app.createStorageSender();
+    var sender = app.createStorageSender();
+    sender.scan();
     setTimeout(function(){
       print(localStorage['h5t@storageList/h5t/sender/send']);
       assert.equal(printLines.join("\n"), "[]"); printLines = [];
@@ -275,7 +276,7 @@ describe("./src/storage.js", function () {
   printLines = []; it("send():base", function() {
  printLines = [];
     var storage = app.createStorage('h5t', 'scan');
-    storage.send({
+    var id = storage.send({
       hisType: 'pageview'
     }, '/host/path/to/t.gif');
     var data = JSON.parse(localStorage['h5t@storageList/h5t/scan/send']);
@@ -283,6 +284,8 @@ describe("./src/storage.js", function () {
     assert.equal(printLines.join("\n"), "/host/path/to/t.gif"); printLines = [];
     print(data[0].data.query);
     assert.equal(printLines.join("\n"), "hisType=pageview"); printLines = [];
+    print(id === data[0].id);
+    assert.equal(printLines.join("\n"), "true"); printLines = [];
     });
  it("send():acceptStyle", function() {
  printLines = [];
@@ -293,13 +296,6 @@ describe("./src/storage.js", function () {
     var data = JSON.parse(localStorage['h5t@storageList/h5t/scan2/send']);
     print(data[0].data.acceptStyle);
     assert.equal(printLines.join("\n"), "path"); printLines = [];
-    });
- it("scan():base", function() {
- printLines = [];
-    var storage = app.createStorage('h5t_scan');
-    storage.send({
-      hisType: 'pageview'
-    }, '/host/path/to/t.gif');
     });
 });
 describe("./src/tracker.js", function () {
@@ -363,10 +359,14 @@ describe("./src/tracker.js", function () {
     var tracker = app.createTracker('h5t', 'send_case_1');
     tracker.set({
       x: 1,
-      y: 2
+      y: 2,
+      id: null
     });
     tracker.send({z: 3});
-    tracker.send({z: null});
+    tracker.send({
+      z: null,
+      id: null
+    });
     tracker.create({
       accept: '/host/case1',
       data: {
@@ -379,11 +379,13 @@ describe("./src/tracker.js", function () {
     print(data[1].data.query);
     assert.equal(printLines.join("\n"), "x=1&y=2"); printLines = [];
     });
- it("send():field is null", function() {
+ it("send():accept is null", function() {
  printLines = [];
     var tracker = app.createTracker('h5', 'send_case_2');
     tracker.send({z: 3});
     tracker.create({});
+    print(typeof localStorage['h5t@storageList/h5t/send_case_2/send']);
+    assert.equal(printLines.join("\n"), "undefined"); printLines = [];
     });
  it("log():case 1", function() {
  printLines = [];

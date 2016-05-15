@@ -31,7 +31,9 @@ var createStorageList = require('./storage-list').createStorageList;
       accept: 'http://host/path/to',
       query: 'level=info&message=click%20button1'
     });
-    app.createStorageSender();
+    var sender = app.createStorageSender();
+    sender.scan();
+
     setTimeout(function(){
       console.log(localStorage['h5t@storageList/h5t/sender/send']);
       // > []
@@ -51,7 +53,6 @@ function createStorageSender() {
 
   function scan(delay) {
     delay = delay || 0;
-    console.log('scan delay: %d', delay);
     if (timer) {
       clearTimeout(timer);
     }
@@ -95,8 +96,6 @@ function createStorageSender() {
 
       var item = storageSends.shift();
 
-      console.log(item);
-
       // 更新发送尝试次数
       storageListDict[item.storageDict].update(item.id, {
         tried: (item.tried || 0) + 1
@@ -128,7 +127,6 @@ function createStorageSender() {
       } else {
         url = path + '?' + item.data.query + (query ? '&' + query : '');
       }
-      console.log(url);
       img.src = url;
 
       instance[item.id] = img;

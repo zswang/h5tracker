@@ -11,6 +11,10 @@ var createEmitter = require('./event').createEmitter;
 var createTracker = require('./tracker').createTracker;
 /*</jdists>*/
 
+/*<jdists encoding="fndep" import="./storage.js" depend="createStorage">*/
+var createStorage = require('./storage').createStorage;
+/*</jdists>*/
+
 /*<jdists encoding="fndep" import="./storage-keys.js" depend="storageKeys">*/
 var storageKeys = require('./storage-keys').storageKeys;
 /*</jdists>*/
@@ -23,8 +27,12 @@ var createSessionManager = require('./session-manager').createSessionManager;
 var createStorageSender = require('./storage-sender').createStorageSender;
 /*</jdists>*/
 
+/*<jdists encoding="fndep" import="./storage-list.js" depend="createStorageList">*/
+var createStorageList = require('./storage-list').createStorageList;
+/*</jdists>*/
+
 /*=== 初始化 ===*/
-/*<function name="createApp" depend="createEmitter,createTracker,newGuid,format,storageKeys,createSessionManager,createStorageSender">*/
+/*<function name="createApp" depend="createEmitter,createTracker,newGuid,format,storageKeys,createSessionManager,createStorageSender,createStorage,createStorageList">*/
 /**
  * 追踪器实例
  *

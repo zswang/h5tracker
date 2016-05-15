@@ -144,10 +144,14 @@ function createTracker(appName, trackerName) {
     var tracker = app.createTracker('h5t', 'send_case_1');
     tracker.set({
       x: 1,
-      y: 2
+      y: 2,
+      id: null
     });
     tracker.send({z: 3});
-    tracker.send({z: null});
+    tracker.send({
+      z: null,
+      id: null
+    });
     tracker.create({
       accept: '/host/case1',
       data: {
@@ -163,11 +167,14 @@ function createTracker(appName, trackerName) {
     console.log(data[1].data.query);
     // > x=1&y=2
     ```
-   * @example send():field is null
+   * @example send():accept is null
     ```js
     var tracker = app.createTracker('h5', 'send_case_2');
     tracker.send({z: 3});
     tracker.create({});
+
+    console.log(typeof localStorage['h5t@storageList/h5t/send_case_2/send']);
+    // > undefined
     ```
    '''</example>'''
    */

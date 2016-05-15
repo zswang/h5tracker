@@ -6,7 +6,7 @@ global.document = dom.document;
 global.localStorage = dom.localStorage;
 global.sessionStorage = dom.sessionStorage;
 
-require('../.');
+require('../src/index.js');
 var app = window.h5t.app;
 
 var util = require('util');

@@ -68,7 +68,7 @@ function createStorage(appName, trackerName) {
    * @example send():base
     ```js
     var storage = app.createStorage('h5t', 'scan');
-    storage.send({
+    var id = storage.send({
       hisType: 'pageview'
     }, '/host/path/to/t.gif');
 
@@ -79,6 +79,9 @@ function createStorage(appName, trackerName) {
 
     console.log(data[0].data.query);
     // > hisType=pageview
+
+    console.log(id === data[0].id);
+    // > true
     ```
    * @example send():acceptStyle
     ```js
@@ -95,6 +98,10 @@ function createStorage(appName, trackerName) {
    '''</example>'''
    */
   function send(data, accept, acceptStyle) {
+    if (!accept) {
+      console.error('accept is undefined.');
+      return;
+    }
     storageListSend.clean();
     var id = storageListSend.push({
       accept: accept,
@@ -102,9 +109,12 @@ function createStorage(appName, trackerName) {
       query: queryFrom(data),
     });
     storageSender.scan();
+    return id;
   }
   instance.send = send;
 
   return instance;
 }
 /*</function>*/
+
+exports.createStorage = createStorage;

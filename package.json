@@ -1,6 +1,6 @@
 {
   "name": "h5tracker",
-  "version": "0.0.111",
+  "version": "0.0.115",
   "main": "h5tracker.js",
   "description": "Logs Tracker of Mobile",
   "repository": {
@@ -19,7 +19,7 @@
     "debug": "gulp debug",
     "example": "gulp example",
     "test": "istanbul cover --hook-run-in-context node_modules/mocha/bin/_mocha -- -R spec",
-    "mocha": "mocha"
+    "mocha": "npm run example && mocha"
   },
   "license": "MIT",
   "bugs": {

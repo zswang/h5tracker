@@ -7,12 +7,26 @@
   <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
   <meta name="format-detection" content="telephone=no" />
-  <script src="../lib/inline.min.js" h5t-config='{"cdn":"../h5tracker.js"}'></script>
+  <script src="../lib/inline.min.js" h5t-config='{"cdn":"../h5tracker.dev.js"}'></script>
   <script>
   h5t('speed.set', 'tt', 123);
   </script>
 </head>
-
+<!--jdists export="#debugAddress">
+function () {
+  var net = require('os').networkInterfaces();
+  var result;
+  Object.keys(net).some(function(key) {
+    return net[key].some(function(item) {
+      if (!item.internal && item.family === 'IPv4') {
+        result = item.address;
+        return true;
+      }
+    });
+  });
+  return result;
+}
+</jdists-->
 <body>
   <button cmd="log">hello 11111111</button> <button cmd="log">hello 2222222</button>
 </body>
@@ -28,7 +42,7 @@ h5t('speed.on', 'send', function(data) {
 
 var timer = setTimeout(function() {
   h5t('speed.create', {
-    accept: 'http://192.168.100.41:3000/t.gif', // 日志接收地址
+    accept: 'http://<!--jdists encoding="#debugAddress" /-->:3000/t.gif', // 日志接收地址
     data: { // 基准数据，即：每次上报都带上
       dm: document.location.origin,
       lo: document.location.pathname

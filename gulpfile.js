@@ -43,11 +43,18 @@ gulp.task('buildInline', function() {
 });
 
 gulp.task('buildDev', function() {
-  return gulp.src(['src/index.js'])
+  gulp.src(['example/base.html'])
     .pipe(jdists({
       trigger: 'debug'
     }))
-    .pipe(rename('h5tracker.js'))
+    .pipe(rename('base.dev.html'))
+    .pipe(gulp.dest('./example'));
+
+  gulp.src(['src/index.js'])
+    .pipe(jdists({
+      trigger: 'debug'
+    }))
+    .pipe(rename('h5tracker.dev.js'))
     .pipe(gulp.dest('./'));
 });
 
@@ -83,7 +90,7 @@ gulp.task('html', function() {
 gulp.task('open', function() {
   gulp.src(__filename)
     .pipe(open({
-      uri: util.format('http://%s:%s/example/base.html', debugAddress(), debugPort)
+      uri: util.format('http://%s:%s/example/base.dev.html', debugAddress(), debugPort)
     }));
 });
 

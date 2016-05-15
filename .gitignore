@@ -32,3 +32,8 @@ node_modules
 
 # Optional REPL history
 .node_repl_history
+
+# debug
+debug
+example/base.dev.html
+h5tracker.dev.js

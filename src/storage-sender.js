@@ -8,24 +8,24 @@
   /**
    * 创建发送器
    *
-     '''<example>'''
-     * @example createStorageSender():base
-      ```js
-      var storageList = app.createStorageList('h5t', 'sender', 'send');
-      storageList.push({
-        accept: 'http://host/path/to',
-        query: 'level=info&message=click%20button1'
-      });
-      var sender = app.createStorageSender();
-      sender.scan();
+   '''<example>'''
+   * @example createStorageSender():base
+    ```js
+    var storageList = app.createStorageList('h5t', 'sender', 'send');
+    storageList.push({
+      accept: 'http://host/path/to',
+      query: 'level=info&message=click%20button1'
+    });
+    var sender = app.createStorageSender();
+    sender.scan();
 
-      setTimeout(function(){
-        console.log(localStorage['h5t@storageList/h5t/sender/send']);
-        // > []
-        //done();
-      }, 1100);
-      ```
-     '''</example>'''
+    setTimeout(function(){
+      console.log(localStorage['h5t@storageList/h5t/sender/send']);
+      // > []
+      //done();
+    }, 1100);
+    ```
+   '''</example>'''
    */
   function createStorageSender() {
 
@@ -99,7 +99,7 @@
         };
         img.onerror = function() {
           delete instance[item.id];
-          scan(60 * 1000); // 发送失败 // 一分钟后扫描
+          scan(5 * 60 * 1000); // 发送失败 // 五分钟后扫描
         };
         // accept = 'host/path/to.gif'
         // accept = 'host/path/to.gif?from=qq'

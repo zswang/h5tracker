@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+  <meta name="format-detection" content="telephone=no" />
+  <title>Log查看器</title>
+  <link rel="stylesheet" href="css/log-viewer.css">
+</head>
+
+<body>
+  <div id="app">
+    <h2>Log查看器</h2>
+    <div class="tabs">
+      <ul class="btns">
+        <li v-for="(key, item) in tabs" v-on:click="activatTab=key" v-bind:class="{activat: activatTab===key}">{{key}}</li>
+        <li class="clean" v-on:click="clean(activatTab)">清除</li>
+      </ul>
+      <div v-for="(key, tab) in tabs" v-show="activatTab===key" class="tab">
+        <dl v-for="item in tab" class="{{item.data.level}}">
+          <dt>
+            <span>ID: {{item.id}}</span>
+            <span>过期: {{getTimeout(item)}}</span>
+            <span>追踪器: {{item._trackerName}}</span>
+            <span v-if="item.tried!==0">请求次数: {{item.tried}}</span>
+          </dt>
+          <dd v-if="key==='log'"><span>{{item.data.level}}</span><span>{{item.data.message}}</span></dd>
+          <dd v-else><p>{{toString(item.data)}}</p></dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</body>
+<script src="http://apps.bdimg.com/libs/vue/1.0.8/vue.min.js"></script>
+<script src="js/log-viewer.js"></script>
+
+</html>

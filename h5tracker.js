@@ -6,7 +6,7 @@
    * @author
    *   zswang (http://weibo.com/zswang)
    *   meglad (https://github.com/meglad)
-   * @version 0.0.119
+   * @version 0.0.121
    * @date 2016-05-16
    */
   var objectName = window.h5tObjectName || 'h5t';
@@ -199,6 +199,8 @@
    * @param {string} trackerName 追踪器名
    * @param {string} listName 列表名称
    * @param {Object} storageInstance 存储实例 localStorage | sessionStorage
+   * @param {number} storageExpires 存储记录过期时间，单位：秒，默认：864000(10天)
+   * @param {number} storageMaxCount 存储的最大记录数，默认：1000
    * @return {Object} 返回存储列表对象
    '''<example>'''
    * @example createStorageList():storageInstance => sessionStorage
@@ -225,10 +227,11 @@
     ```
    '''</example>'''
    */
-  function createStorageList(appName, trackerName, listName, storageInstance, storageExpires) {
+  function createStorageList(appName, trackerName, listName, storageInstance, storageExpires, storageMaxCount) {
     // 参数默认值
     storageInstance = storageInstance || localStorage;
     storageExpires = storageExpires || 864000; // 10 * 24 * 60 * 60
+    storageMaxCount = storageMaxCount || 1000;
     var instance = {};
     var scope = {
       name: listName,
@@ -286,7 +289,7 @@
      '''<example>'''
      * @example push():base
       ```js
-      var storageList = app.createStorageList('h5t', 'push', 'log');
+      var storageList = app.createStorageList('h5t', 'push_case_1', 'log');
       storageList.push({
         level: 'info',
         message: 'click button1'
@@ -295,7 +298,7 @@
         level: 'info',
         message: 'click button2'
       });
-      var data = JSON.parse(localStorage['h5t@storageList/h5t/push/log']);
+      var data = JSON.parse(localStorage['h5t@storageList/h5t/push_case_1/log']);
       console.log(data.length);
       // > 2
       console.log(data[0].data.message);
@@ -303,12 +306,28 @@
       console.log(data[1].data.message);
       // > click button2
       ```
+     * @example push():storageMaxCount = 5
+      ```js
+      var storageList = app.createStorageList('h5t', 'push_case_2', 'log', null, null, 5);
+      for (var i = 0; i < 6; i++ ) {
+        storageList.push({
+          level: 'info',
+          message: 'click button' + i
+        });
+      }
+      var data = JSON.parse(localStorage['h5t@storageList/h5t/push_case_2/log']);
+      console.log(data.length);
+      // > 5
+      ```
      '''</example>'''
      */
     function push(data) {
       load();
       var id = newGuid();
       var birthday = Date.now();
+      while (list.length >= storageMaxCount) { // 清除历史数据
+        list.shift();
+      }
       list.push({
         id: id,
         birthday: birthday,

@@ -28,7 +28,7 @@ function () {
 }
 </jdists-->
 <body>
-  <button cmd="log">hello 11111111</button> <button cmd="log">hello 2222222</button>
+  <button cmd="log">hello 11111111</button> <button cmd="level">hello level</button>
 </body>
 <script>
 h5t('speed.on', 'log', function(data) {
@@ -59,6 +59,9 @@ var timer = setTimeout(function() {
       },
     }
   });
+  h5t('level.create', {
+    accept: 'http://<!--jdists encoding="#debugAddress" /-->:3000/t.gif', // 日志接收地址
+  })
 }, 2000);
 
 function doAction(cmd, element) {
@@ -70,6 +73,28 @@ function doAction(cmd, element) {
       });
       h5t('speed.send', {
         level: 'info',
+        message: element.innerHTML
+      });
+      break;
+    case 'level':
+      h5t('level.log', {
+        level:'debug',
+        message: element.innerHTML
+      });
+      h5t('level.log', {
+        level:'info',
+        message: element.innerHTML
+      });
+      h5t('level.log', {
+        level:'warn',
+        message: element.innerHTML
+      });
+      h5t('level.log', {
+        level:'error',
+        message: element.innerHTML
+      });
+      h5t('level.log', {
+        level:'fatal',
         message: element.innerHTML
       });
       break;

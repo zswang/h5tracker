@@ -11,6 +11,8 @@ var watch = require('gulp-watch');
 var connect = require('gulp-connect');
 var uglify = require('gulp-uglify');
 var open = require('gulp-open');
+var less = require('gulp-less');
+var autoprefixer = require('gulp-autoprefixer');
 
 gulp.task('example', function() {
   return gulp.src('example.jdists.js')
@@ -83,7 +85,7 @@ gulp.task('connect', function() {
 });
 
 gulp.task('html', function() {
-  gulp.src('./example/*.html')
+  gulp.src(['./example/*.html', './tools/**/*.html|css|js'])
     .pipe(connect.reload());
 });
 
@@ -94,8 +96,18 @@ gulp.task('open', function() {
     }));
 });
 
+gulp.task('less', function() {
+  gulp.src('./tools/less/*.less')
+    .pipe(less())
+    .pipe(autoprefixer({
+      cascade: true,
+      remove:true
+    }))
+    .pipe(gulp.dest('./tools/css/'));
+})
+
 gulp.task('watch', function() {
-  gulp.watch(['src/*.js', 'example/*.html'], ['buildDev', 'buildInline', 'html']);
+  gulp.watch(['src/*.js', 'example/*.html', './tools/**/*.*'], ['buildDev', 'buildInline', 'html' ,'less']);
 });
 
 gulp.task('debug', ['buildDev', 'buildInline', 'html', 'connect', 'open', 'watch']);

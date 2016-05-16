@@ -143,7 +143,7 @@ describe("./src/storage-list.js", function () {
   });
   it("push():base", function() {
     printLines = [];
-      var storageList = app.createStorageList('h5t', 'push', 'log');
+      var storageList = app.createStorageList('h5t', 'push_case_1', 'log');
       storageList.push({
         level: 'info',
         message: 'click button1'
@@ -152,13 +152,26 @@ describe("./src/storage-list.js", function () {
         level: 'info',
         message: 'click button2'
       });
-      var data = JSON.parse(localStorage['h5t@storageList/h5t/push/log']);
+      var data = JSON.parse(localStorage['h5t@storageList/h5t/push_case_1/log']);
       print(data.length);
       assert.equal(printLines.join("\n"), "2"); printLines = [];
       print(data[0].data.message);
       assert.equal(printLines.join("\n"), "click button1"); printLines = [];
       print(data[1].data.message);
       assert.equal(printLines.join("\n"), "click button2"); printLines = [];
+  });
+  it("push():storageMaxCount = 5", function() {
+    printLines = [];
+      var storageList = app.createStorageList('h5t', 'push_case_2', 'log', null, null, 5);
+      for (var i = 0; i < 6; i++ ) {
+        storageList.push({
+          level: 'info',
+          message: 'click button' + i
+        });
+      }
+      var data = JSON.parse(localStorage['h5t@storageList/h5t/push_case_2/log']);
+      print(data.length);
+      assert.equal(printLines.join("\n"), "5"); printLines = [];
   });
   it("toArray():base", function() {
     printLines = [];

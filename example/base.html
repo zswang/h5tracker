@@ -45,24 +45,24 @@ var timer = setTimeout(function() {
   h5t('speed.create', {
     accept: 'http://<!--jdists encoding="#debugAddress" /-->:3000/t.gif', // 日志接收地址
     data: { // 基准数据，即：每次上报都带上
-      dm: document.location.origin,
+      dm: document.domain,
       lo: document.location.pathname
     },
     event: { // 事件
       createSession: function() { // session 被创建
-
+        this.send({
+          ht: 'appview'
+        });
       },
       send: function(data) { // 发送日志
-        data.logType = 'click';
+        data.lt = 'click';
       },
       log: function(data) { // 记录日志
 
       },
     }
   });
-  h5t('level.create', {
-    accept: 'http://<!--jdists encoding="#debugAddress" /-->:3000/t.gif', // 日志接收地址
-  })
+  h5t('level.create', {})
 }, 2000);
 
 function doAction(cmd, element) {

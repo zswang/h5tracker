@@ -1,4 +1,4 @@
-/*<remove trigger="release">*/
+/*<remove>*/
 var name = 'h5t';
 window[name] = function(cmd, src) {
   (window[name].q = window[name].q || []).push(arguments);
@@ -69,7 +69,7 @@ window[name]('set', 'debug', true);
   /*</jdists>*/
 
   var app = createApp(objectName);
-  /*<remove trigger="release">*/
+  /*<remove>*/
   app.entery = arguments.callee;
   app.oldEntery = oldObject;
   /*</remove>*/

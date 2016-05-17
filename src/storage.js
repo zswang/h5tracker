@@ -94,10 +94,13 @@
      '''</example>'''
      */
     function send(data, accept, acceptStyle) {
+      /*<safe>*/
       if (!accept) {
         console.error('accept is undefined.');
         return;
       }
+      /*</safe>*/
+
       storageListSend.clean();
       var id = storageListSend.push({
         accept: accept,

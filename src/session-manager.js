@@ -63,6 +63,7 @@
    '''</example>'''
    */
   function createSessionManager(sessionExpires) {
+    var storageInstance = sessionStorage;
     sessionExpires = sessionExpires || 30;
     var instance = createEmitter();
 
@@ -74,7 +75,7 @@
     };
 
     instance.get = createGetter(instance, function (name) {
-      return sessionStorage[fieldsKey[name]];
+      return storageInstance[fieldsKey[name]];
     }, true);
 
     /**
@@ -98,18 +99,18 @@
      '''</example>'''
      */
     function createSession() {
-      if (sessionStorage[storageKeys.sessionId]) {
+      if (storageInstance[storageKeys.sessionId]) {
         instance.emit('destroySession');
       }
       var now = Date.now();
-      sessionStorage[storageKeys.sessionId] = newGuid();
-      if (sessionStorage[storageKeys.sessionSeq] === null || isNaN(sessionStorage[storageKeys.sessionSeq])) {
-        sessionStorage[storageKeys.sessionSeq] = 0;
+      storageInstance[storageKeys.sessionId] = newGuid();
+      if (storageInstance[storageKeys.sessionSeq] === null || isNaN(storageInstance[storageKeys.sessionSeq])) {
+        storageInstance[storageKeys.sessionSeq] = 0;
       } else {
-        sessionStorage[storageKeys.sessionSeq] = parseInt(sessionStorage[storageKeys.sessionSeq]) + 1;
+        storageInstance[storageKeys.sessionSeq] = parseInt(storageInstance[storageKeys.sessionSeq]) + 1;
       }
-      sessionStorage[storageKeys.sessionBirthday] = now;
-      sessionStorage[storageKeys.sessionLiveTime] = now;
+      storageInstance[storageKeys.sessionBirthday] = now;
+      storageInstance[storageKeys.sessionLiveTime] = now;
       instance.emit('createSession');
     }
     instance.createSession = createSession;
@@ -133,28 +134,28 @@
      '''</example>'''
      */
     function destroySession() {
-      if (sessionStorage[storageKeys.sessionId]) {
-        delete sessionStorage[storageKeys.sessionId];
-        delete sessionStorage[storageKeys.sessionBirthday];
-        delete sessionStorage[storageKeys.sessionLiveTime];
+      if (storageInstance[storageKeys.sessionId]) {
+        delete storageInstance[storageKeys.sessionId];
+        delete storageInstance[storageKeys.sessionBirthday];
+        delete storageInstance[storageKeys.sessionLiveTime];
         instance.emit('destroySession');
       }
     }
     instance.destroySession = destroySession;
 
-    if (!sessionStorage[storageKeys.sessionId]) {
+    if (!storageInstance[storageKeys.sessionId]) {
       createSession();
     }
 
     function inputHandler(e) {
       var now = Date.now();
 
-      if (now - sessionStorage[storageKeys.sessionLiveTime] >= sessionExpires * 1000) {
+      if (now - storageInstance[storageKeys.sessionLiveTime] >= sessionExpires * 1000) {
         createSession();
       } else {
         // setTimeout 避免多个 app 实例互相影响
         setTimeout(function () {
-          sessionStorage[storageKeys.sessionLiveTime] = now;
+          storageInstance[storageKeys.sessionLiveTime] = now;
         });
       }
     }

@@ -7,7 +7,7 @@
    * @author
    *   zswang (http://weibo.com/zswang)
    *   meglad (https://github.com/meglad)
-   * @version 0.0.193
+   * @version 0.0.196
    * @date 2016-05-17
    */
   /**
@@ -1041,10 +1041,6 @@
      '''</example>'''
      */
     function send(data, accept, acceptStyle) {
-      if (!accept) {
-        console.error('accept is undefined.');
-        return;
-      }
       storageListSend.clean();
       var id = storageListSend.push({
         accept: accept,
@@ -1147,6 +1143,7 @@
    '''</example>'''
    */
   function createSessionManager(sessionExpires) {
+    var storageInstance = sessionStorage;
     sessionExpires = sessionExpires || 30;
     var instance = createEmitter();
     var fieldsKey = {
@@ -1156,7 +1153,7 @@
       liveTime: storageKeys.sessionLiveTime,
     };
     instance.get = createGetter(instance, function (name) {
-      return sessionStorage[fieldsKey[name]];
+      return storageInstance[fieldsKey[name]];
     }, true);
     /**
      * 创建 Session
@@ -1176,18 +1173,18 @@
      '''</example>'''
      */
     function createSession() {
-      if (sessionStorage[storageKeys.sessionId]) {
+      if (storageInstance[storageKeys.sessionId]) {
         instance.emit('destroySession');
       }
       var now = Date.now();
-      sessionStorage[storageKeys.sessionId] = newGuid();
-      if (sessionStorage[storageKeys.sessionSeq] === null || isNaN(sessionStorage[storageKeys.sessionSeq])) {
-        sessionStorage[storageKeys.sessionSeq] = 0;
+      storageInstance[storageKeys.sessionId] = newGuid();
+      if (storageInstance[storageKeys.sessionSeq] === null || isNaN(storageInstance[storageKeys.sessionSeq])) {
+        storageInstance[storageKeys.sessionSeq] = 0;
       } else {
-        sessionStorage[storageKeys.sessionSeq] = parseInt(sessionStorage[storageKeys.sessionSeq]) + 1;
+        storageInstance[storageKeys.sessionSeq] = parseInt(storageInstance[storageKeys.sessionSeq]) + 1;
       }
-      sessionStorage[storageKeys.sessionBirthday] = now;
-      sessionStorage[storageKeys.sessionLiveTime] = now;
+      storageInstance[storageKeys.sessionBirthday] = now;
+      storageInstance[storageKeys.sessionLiveTime] = now;
       instance.emit('createSession');
     }
     instance.createSession = createSession;
@@ -1207,25 +1204,25 @@
      '''</example>'''
      */
     function destroySession() {
-      if (sessionStorage[storageKeys.sessionId]) {
-        delete sessionStorage[storageKeys.sessionId];
-        delete sessionStorage[storageKeys.sessionBirthday];
-        delete sessionStorage[storageKeys.sessionLiveTime];
+      if (storageInstance[storageKeys.sessionId]) {
+        delete storageInstance[storageKeys.sessionId];
+        delete storageInstance[storageKeys.sessionBirthday];
+        delete storageInstance[storageKeys.sessionLiveTime];
         instance.emit('destroySession');
       }
     }
     instance.destroySession = destroySession;
-    if (!sessionStorage[storageKeys.sessionId]) {
+    if (!storageInstance[storageKeys.sessionId]) {
       createSession();
     }
     function inputHandler(e) {
       var now = Date.now();
-      if (now - sessionStorage[storageKeys.sessionLiveTime] >= sessionExpires * 1000) {
+      if (now - storageInstance[storageKeys.sessionLiveTime] >= sessionExpires * 1000) {
         createSession();
       } else {
         // setTimeout 避免多个 app 实例互相影响
         setTimeout(function () {
-          sessionStorage[storageKeys.sessionLiveTime] = now;
+          storageInstance[storageKeys.sessionLiveTime] = now;
         });
       }
     }
@@ -1402,10 +1399,6 @@
         });
         return;
       }
-      if (!options.accept) {
-        console.error('options.accept is undefined.');
-        return;
-      }
       // merge data
       var item = {
         id: newGuid()
@@ -1487,10 +1480,6 @@
           level: 'debug'
         };
       }
-      if (!data.level) {
-        console.error('log level is undefined.');
-        return;
-      }
       if (!created) {
         actionList.push({
           name: 'log',
@@ -1539,14 +1528,6 @@
      '''</example>'''
      */
     function create(opts) {
-      if (created) {
-        console.error('Cannot duplicate create tracker.');
-        return;
-      }
-      if (!opts) {
-        console.error('Parameter "opts" cannot be empty.');
-        return;
-      }
       created = true;
       options = opts;
       actionList.forEach(function (item) {
@@ -1659,15 +1640,7 @@
       '''</example>'''
      */
     function cmd(line) {
-      if (typeof line !== 'string') {
-        console.error('Parameter "line" is not a string type.');
-        return;
-      }
       var match = line.match(/^(?:([\w$_]+)\.)?(\w+)$/);
-      if (!match) {
-        console.error('Parameter "line" is invalid format.');
-        return;
-      }
       var trackerName = match[1];
       var methodName = match[2];
       var methodArgs = [].slice.call(arguments, 1);

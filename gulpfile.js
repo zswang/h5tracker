@@ -39,7 +39,8 @@ var app = window.h5t.app;
 gulp.task('build', function() {
   return gulp.src(['src/index.js'])
     .pipe(jdists({
-      trigger: 'release'
+      trigger: 'release',
+      remove: 'remove,debug,test,safe'
     }))
     .pipe(rename('h5tracker.js'))
     .pipe(gulp.dest('./'))

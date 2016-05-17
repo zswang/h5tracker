@@ -163,16 +163,20 @@
       '''</example>'''
      */
     function cmd(line) {
+      /*<safe>*/
       if (typeof line !== 'string') {
         console.error('Parameter "line" is not a string type.');
         return;
       }
+      /*</safe>*/
 
       var match = line.match(/^(?:([\w$_]+)\.)?(\w+)$/);
+      /*<safe>*/
       if (!match) {
         console.error('Parameter "line" is invalid format.');
         return;
       }
+      /*</safe>*/
       var trackerName = match[1];
       var methodName = match[2];
 

@@ -197,10 +197,12 @@
         });
         return;
       }
+      /*<safe>*/
       if (!options.accept) {
         console.error('options.accept is undefined.');
         return;
       }
+      /*</safe>*/
       // merge data
       var item = {
         id: newGuid()
@@ -284,10 +286,12 @@
           level: 'debug'
         };
       }
+      /*<safe>*/
       if (!data.level) {
         console.error('log level is undefined.');
         return;
       }
+      /*</safe>*/
       if (!created) {
         actionList.push({
           name: 'log',
@@ -341,6 +345,7 @@
      '''</example>'''
      */
     function create(opts) {
+      /*<safe>*/
       if (created) {
         console.error('Cannot duplicate create tracker.');
         return;
@@ -349,6 +354,7 @@
         console.error('Parameter "opts" cannot be empty.');
         return;
       }
+      /*</safe>*/
       created = true;
       options = opts;
 

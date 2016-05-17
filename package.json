@@ -1,6 +1,6 @@
 {
   "name": "h5tracker",
-  "version": "0.0.121",
+  "version": "0.0.196",
   "main": "h5tracker.js",
   "description": "Logs Tracker of Mobile",
   "repository": {
@@ -18,8 +18,10 @@
     "dist": "npm run _update_version && npm run _dist && npm run example && npm test",
     "debug": "gulp debug",
     "example": "gulp example",
+    "lint": "jshint src/*.js",
     "test": "istanbul cover --hook-run-in-context node_modules/mocha/bin/_mocha -- -R spec",
-    "mocha": "npm run example && mocha"
+    "mocha": "npm run example && mocha",
+    "mocha2": "mocha test/storage-list.js"
   },
   "license": "MIT",
   "bugs": {
@@ -47,13 +49,14 @@
     "gulp-autoprefixer": "^3.1.0",
     "gulp-connect": "^4.0.0",
     "gulp-jdists": "^0.0.5",
-    "gulp-jshint": "^2.0.0",
     "gulp-less": "^3.1.0",
     "gulp-open": "^2.0.0",
     "gulp-rename": "^1.2.2",
     "gulp-uglify": "^1.5.3",
     "gulp-watch": "^4.3.5",
+    "gulp-examplejs": "^0.0.5",
     "istanbul": "^0.3.17",
+    "jshint": "2.8.0",
     "jsets": "^0.0.5",
     "mocha": "^2.0.1",
     "should": "^4.1.0"

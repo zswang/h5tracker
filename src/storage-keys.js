@@ -8,6 +8,7 @@
       scanTime: prefix + 'global/scanTime',
 
       sessionId: prefix + 'global/sessionId',
+      sessionSeq: prefix + 'global/sessionSeq',
       sessionBirthday: prefix + 'global/sessionBirthday',
       sessionLiveTime: prefix + 'global/sessionLiveTime',
 

@@ -104,7 +104,7 @@ class HTMLImage extends HTMLElement {
       } else {
         self.dispatchEvent('load');
       }
-    }, 1000);
+    }, 0);
   }
 }
 

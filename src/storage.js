@@ -1,5 +1,9 @@
 (function () {
 
+  /*<jdists encoding="fndep" import="./common.js" depend="queryFrom">*/
+  var queryFrom = require('./common').queryFrom;
+  /*</jdists>*/
+
   /*<jdists encoding="fndep" import="./storage-list.js" depend="createStorageList">*/
   var createStorageList = require('./storage-list').createStorageList;
   /*</jdists>*/
@@ -12,7 +16,7 @@
   var createStorageSender = require('./storage-sender').createStorageSender;
   /*</jdists>*/
 
-  /*<function name="createStorage" depend="createStorageList,createEmitter,createStorageSender">*/
+  /*<function name="createStorage" depend="createStorageList,createEmitter,createStorageSender,queryFrom">*/
   var storageSender = createStorageSender();
 
   /**
@@ -44,23 +48,6 @@
     instance.log = log;
 
     /**
-     * 拼装 URL 调用参数
-     *
-     * @param {Object} data 参数
-     * @return {string} 返回拼接的字符串
-     */
-    function queryFrom(data) {
-      var result = [];
-      Object.keys(data).forEach(function(key) {
-        if (data[key] === null) {
-          return;
-        }
-        result.push(encodeURIComponent(key) + '=' + encodeURIComponent(data[key]));
-      });
-      return result.join('&');
-    }
-
-    /**
      * 发送数据
      *
      * @param {Object} data 发送数据
@@ -69,12 +56,12 @@
      '''<example>'''
      * @example send():base
       ```js
-      var storage = app.createStorage('h5t', 'scan');
+      var storage = app.createStorage('h5t', 'send');
       var id = storage.send({
         hisType: 'pageview'
       }, '/host/path/to/t.gif');
 
-      var data = JSON.parse(localStorage['h5t@storageList/h5t/scan/send']);
+      var data = JSON.parse(localStorage['h5t@storageList/h5t/send/send']);
 
       console.log(data[0].data.accept);
       // > /host/path/to/t.gif
@@ -87,23 +74,33 @@
       ```
      * @example send():acceptStyle
       ```js
-      var storage = app.createStorage('h5t', 'scan2');
+      var storage = app.createStorage('h5t', 'send2');
       storage.send({
         hisType: 'pageview'
       }, '/host/path/to/t.gif', 'path');
 
-      var data = JSON.parse(localStorage['h5t@storageList/h5t/scan2/send']);
+      var data = JSON.parse(localStorage['h5t@storageList/h5t/send2/send']);
 
       console.log(data[0].data.acceptStyle);
       // > path
       ```
+     * @example send():accept is undefined
+      ```js
+      var storage = app.createStorage('h5t', 'send3');
+      storage.send({
+        hisType: 'pageview'
+      });
+      ```
      '''</example>'''
      */
     function send(data, accept, acceptStyle) {
+      /*<safe>*/
       if (!accept) {
         console.error('accept is undefined.');
         return;
       }
+      /*</safe>*/
+
       storageListSend.clean();
       var id = storageListSend.push({
         accept: accept,

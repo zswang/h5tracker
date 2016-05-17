@@ -178,6 +178,15 @@
       console.log(typeof localStorage['h5t@storageList/h5t/send_case_2/send']);
       // > undefined
       ```
+     * @example send():event {}
+      ```js
+      var tracker = app.createTracker('h5t', 'send_case_3');
+      tracker.send({message: 'case_3'});
+      tracker.create({
+        accept: '/host/case3',
+        event: {}
+      });
+      ```
      '''</example>'''
      */
     function send(data) {
@@ -188,10 +197,12 @@
         });
         return;
       }
+      /*<safe>*/
       if (!options.accept) {
         console.error('options.accept is undefined.');
         return;
       }
+      /*</safe>*/
       // merge data
       var item = {
         id: newGuid()
@@ -238,8 +249,7 @@
       tracker.info('info log.');
       tracker.warn('warn log.');
       tracker.fatal('fatal log.');
-      tracker.create({
-      });
+      tracker.create({});
 
       var data = JSON.parse(localStorage['h5t@storageList/h5t/log_case_1/log']);
 
@@ -253,9 +263,35 @@
       // > warn warn log.
       // > fatal fatal log.
       ```
+     * @example log():level is undefined
+      ```js
+      var tracker = app.createTracker('h5t', 'log_case_2');
+      tracker.log({});
+      tracker.create({});
+      ```
+     * @example log():event {}
+      ```js
+      var tracker = app.createTracker('h5t', 'log_case_3');
+      tracker.log('case3');
+      tracker.create({
+        event: {}
+      });
+      ```
      '''</example>'''
      */
     function log(data) {
+      if (typeof data === 'string') {
+        data = {
+          message: data,
+          level: 'debug'
+        };
+      }
+      /*<safe>*/
+      if (!data.level) {
+        console.error('log level is undefined.');
+        return;
+      }
+      /*</safe>*/
       if (!created) {
         actionList.push({
           name: 'log',
@@ -263,17 +299,6 @@
         });
         return;
       }
-      if (typeof data === 'string') {
-        data = {
-          message: data,
-          level: 'debug'
-        };
-      }
-      if (!data.level) {
-        console.error('log level is undefined.');
-        return;
-      }
-
       var item = {};
       Object.keys(data).forEach(function (key) {
         item[key] = data[key];
@@ -320,6 +345,7 @@
      '''</example>'''
      */
     function create(opts) {
+      /*<safe>*/
       if (created) {
         console.error('Cannot duplicate create tracker.');
         return;
@@ -328,6 +354,7 @@
         console.error('Parameter "opts" cannot be empty.');
         return;
       }
+      /*</safe>*/
       created = true;
       options = opts;
 

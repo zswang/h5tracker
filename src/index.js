@@ -1,3 +1,11 @@
+/*<remove trigger="release">*/
+var name = 'h5t';
+window[name] = function(cmd, src) {
+  (window[name].q = window[name].q || []).push(arguments);
+};
+window[name]('set', 'debug', true);
+/*</remove>*/
+
 (function(document, window) {
 
   /*<jdists encoding="ejs" data="../package.json">*/
@@ -19,6 +27,37 @@
    */
   /*</jdists>*/
 
+  /**
+   '''<example>'''
+   * @example h5tObjectName
+    ```js
+    console.log(!!window['h5t']);
+    // > true
+
+    console.log(app.get('debug'));
+    // > true
+
+    app.oldEntery('set', 'debug', false);
+    console.log(app.get('debug'));
+    // > false
+    ```
+   * @example entery
+    ```js
+    app.entery(document, window);
+    ```
+   * @example oldObject is null
+    ```js
+    delete window['h5t'];
+    app.entery(document, window);
+    ```
+   * @example oldObject.q null
+    ```js
+    window['h5t'] = {};
+    app.entery(document, window);
+    ```
+   '''</example>'''
+   */
+
   var objectName = window.h5tObjectName || 'h5t';
   var oldObject = window[objectName];
   if (oldObject && oldObject.defined) { // 避免重复加载
@@ -30,6 +69,10 @@
   /*</jdists>*/
 
   var app = createApp(objectName);
+  /*<remove trigger="release">*/
+  app.entery = arguments.callee;
+  app.oldEntery = oldObject;
+  /*</remove>*/
 
   var instance = function() {
     app.cmd.apply(app, arguments);

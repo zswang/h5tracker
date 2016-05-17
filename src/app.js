@@ -1,8 +1,9 @@
-(function () {
+(function() {
 
-  /*<jdists encoding="fndep" import="./common.js" depend="newGuid,format">*/
+  /*<jdists encoding="fndep" import="./common.js" depend="newGuid,format,queryFrom">*/
   var newGuid = require('./common').newGuid;
   var format = require('./common').format;
+  var queryFrom = require('./common').queryFrom;
   /*</jdists>*/
 
   /*<jdists encoding="fndep" import="./event.js" depend="createEmitter">*/
@@ -34,7 +35,7 @@
   /*</jdists>*/
 
   /*=== 初始化 ===*/
-  /*<function name="createApp" depend="createEmitter,createTracker,newGuid,format,storageKeys,createSessionManager,createStorageSender,createStorage,createStorageList">*/
+  /*<function name="createApp" depend="createEmitter,createTracker,newGuid,format,queryFrom,storageKeys,createSessionManager,createStorageSender,createStorage,createStorageList">*/
   /**
    * 追踪器实例
    *
@@ -46,20 +47,35 @@
    * 创建应用追踪器
    *
    * @param {string} appName 应用名
-   * @param {Object} argv 配置项
+   * @param {number} sessionExpires 回话过期时间，单位：秒，默认 30
    * @return {Object} 返回应用追踪器实例
    '''<example>'''
-   * @example test done
-   ```js
-    setTimeout(function() {
-      console.log('hello');
-      // > hello
-      //done();
-    }, 1000);
-   ```
+   * @example createApp():base
+    ```js
+    var appInstance = app.createApp('cctv1');
+    console.log(appInstance.name);
+    // > cctv1
+
+    var appInstance = app.createApp();
+    console.log(appInstance.name);
+    // > h5t
+    ```
+   * @example createApp():sessionExpires => 1
+    ```js
+    var appInstance = app.createApp('cctv2', 1);
+    appInstance.on('createSession', function () {
+      console.log(appInstance.name);
+      // > cctv2
+      // * done
+    });
+    setTimeout(function () {
+      document.dispatchEvent('mousemove');
+    }, 1500);
+    ```
    '''</example>'''
-  */
-  function createApp(appName) {
+   */
+  function createApp(appName, sessionExpires) {
+    appName = appName || 'h5t';
     /*<remove trigger="release">*/
     console.log('createApp() appName: %s', appName);
     /*</remove>*/
@@ -68,28 +84,35 @@
     if (!userId) {
       userId = localStorage[storageKeys.userId] = newGuid();
     }
-    var instance = createTracker('main');
+    var instance = createTracker(appName, appName);
+
+    /*<remove trigger="release">*/
     instance.createEmitter = createEmitter;
     instance.createStorage = createStorage;
     instance.createStorageList = createStorageList;
     instance.createTracker = createTracker;
     instance.newGuid = newGuid;
+    instance.format = format;
+    instance.queryFrom = queryFrom;
     instance.storageKeys = storageKeys;
     instance.createApp = createApp;
     instance.createSessionManager = createSessionManager;
     instance.createStorageSender = createStorageSender;
+    /*</remove>*/
 
-    instance.set({
-      user: userId
-    });
-    trackers[instance.name] = instance;
+    trackers[appName] = instance;
 
-    var sessionManager = createSessionManager();
-    sessionManager.on('createSession', function () {
-      instance.emit('createSession');
+    var sessionManager = createSessionManager(sessionExpires);
+    sessionManager.on('createSession', function() {
+      Object.keys(trackers).forEach(function(key) {
+        trackers[key].emit('createSession');
+      });
     });
-    sessionManager.on('destroySession', function () {
-      instance.emit('destroySession');
+
+    sessionManager.on('destroySession', function() {
+      Object.keys(trackers).forEach(function(key) {
+        trackers[key].emit('destroySession');
+      });
     });
 
     /*=== 生命周期 ===*/
@@ -98,7 +121,46 @@
      * 执行命令
      *
      * @param {string} line "[trackerName.]methodName"
-     * @return {[type]}      [description]
+     '''<example>'''
+     * @example cmd():set
+      ```js
+      app.cmd('tracker1.set', 'x', 2);
+
+      console.log(app.cmd('tracker1.get', 'x'));
+      // > 2
+      ```
+     * @example cmd():default set
+      ```js
+      app.cmd('set', 'x', 3);
+
+      console.log(app.cmd('get', 'x'));
+      // > 3
+      ```
+     * @example cmd():type error
+      ```js
+      app.cmd(112);
+      ```
+     * @example cmd():invalid format
+      ```js
+      app.cmd('^tt^.set', 'x', 1);
+      ```
+     * @example cmd():method is invalid
+      ```js
+      app.cmd('hello');
+      ```
+     * @example cmd():"send" method
+      ```js
+      app.cmd('send', {
+        event: 'click'
+      });
+      app.cmd('create', {
+        accept: '/host/path/to'
+      });
+      var list = JSON.parse(localStorage['h5t@storageList/h5t/h5t/send']);
+      console.log(/event=click/.test(list[0].data.query));
+      // > true
+      ```
+      '''</example>'''
      */
     function cmd(line) {
       if (typeof line !== 'string') {
@@ -117,28 +179,28 @@
       var methodArgs = [].slice.call(arguments, 1);
 
       // console.log('trackerName: %s, methodName: %s', trackerName, methodName);
-      if (!trackerName) {
-        if (typeof app[methodName] === 'function') {
-          return app[methodName].apply(app, methodArgs);
-        }
-        else {
-          console.error('App method "%s" is invalid.', methodName);
-        }
-      }
-      else {
-        var tracker = trackers[trackerName];
+      var tracker;
+      if (trackerName) {
+        tracker = trackers[trackerName];
         if (!tracker) {
           tracker = trackers[trackerName] = createTracker(appName, trackerName);
+        }
+      } else {
+        tracker = instance;
+      }
+
+      if (typeof tracker[methodName] === 'function') {
+        if (methodName === 'send') {
           tracker.set({
-            user: userId
+            uid: userId,
+            sid: sessionManager.get('sid'),
+            seq: sessionManager.get('seq'),
+            time: (Date.now() - sessionManager.get('birthday')).toString(36)
           });
         }
-        if (typeof tracker[methodName] === 'function') {
-          return tracker[methodName].apply(tracker, methodArgs);
-        }
-        else {
-          console.error('Tracker method "%s" is invalid.', methodName);
-        }
+        return tracker[methodName].apply(tracker, methodArgs);
+      } else {
+        console.error('Tracker method "%s" is invalid.', methodName);
       }
     }
     instance.cmd = cmd;

@@ -27,37 +27,48 @@
     ```js
     var sessionManager = app.createSessionManager();
     var sessionId = sessionStorage['h5t@global/sessionId'];
+    var sessionSeq = sessionStorage['h5t@global/sessionSeq'];
     var birthday = sessionStorage['h5t@global/sessionBirthday'];
     var liveTime = sessionStorage['h5t@global/sessionLiveTime'];
-    console.log(!!sessionId && !!birthday && !!liveTime);
+
+    console.log(sessionSeq >= 0);
     // > true
-    console.log(sessionId === sessionManager.get('id'));
+
+    console.log(birthday && birthday === liveTime);
     // > true
+
+    console.log(sessionId === sessionManager.get('sid'));
+    // > true
+
+    console.log(sessionSeq === sessionManager.get('seq'));
+    // > true
+
     console.log(birthday === sessionManager.get('birthday'));
     // > true
+
     console.log(liveTime === sessionManager.get('liveTime'));
     // > true
     ```
-    * @example createSessionManager():sessionExpires => 3
+    * @example createSessionManager():sessionExpires => 1
     ```js
-    var timeout = 3;
+    var timeout = 1;
     var sessionManager = app.createSessionManager(timeout);
 
     setTimeout(function(){
       console.log(Date.now() - sessionManager.get('liveTime') > timeout * 1000);
       // > true
-      //done();
-    }, 3500);
+      // * done
+    }, 1500);
     ```
    '''</example>'''
    */
   function createSessionManager(sessionExpires) {
     sessionExpires = sessionExpires || 30;
-
     var instance = createEmitter();
 
     var fieldsKey = {
-      id: storageKeys.sessionId,
+      sid: storageKeys.sessionId,
+      seq: storageKeys.sessionSeq,
       birthday: storageKeys.sessionBirthday,
       liveTime: storageKeys.sessionLiveTime,
     };
@@ -72,13 +83,16 @@
      * @example createSession():base
       ```js
       var sessionManager = app.createSessionManager();
-      var sessionId = sessionManager.get('id');
+      var sessionId = sessionManager.get('sid');
+
       console.log(!!sessionId);
       // > true
+
       sessionManager.createSession();
-      console.log(!!sessionManager.get('id'));
+      console.log(!!sessionManager.get('sid'));
       // > true
-      console.log(sessionId != sessionManager.get('id'));
+
+      console.log(sessionId !== sessionManager.get('sid'));
       // > true
       ```
      '''</example>'''
@@ -89,6 +103,11 @@
       }
       var now = Date.now();
       sessionStorage[storageKeys.sessionId] = newGuid();
+      if (sessionStorage[storageKeys.sessionSeq] === null || isNaN(sessionStorage[storageKeys.sessionSeq])) {
+        sessionStorage[storageKeys.sessionSeq] = 0;
+      } else {
+        sessionStorage[storageKeys.sessionSeq] = parseInt(sessionStorage[storageKeys.sessionSeq]) + 1;
+      }
       sessionStorage[storageKeys.sessionBirthday] = now;
       sessionStorage[storageKeys.sessionLiveTime] = now;
       instance.emit('createSession');
@@ -101,10 +120,14 @@
      * @example destroySession():base
       ```js
       var sessionManager = app.createSessionManager();
-      console.log(!!sessionManager.get('id'));
+
+      console.log(!!sessionManager.get('sid'));
       // > true
+
       sessionManager.destroySession();
-      console.log(!!sessionManager.get('id'));
+      sessionManager.destroySession();
+
+      console.log(!!sessionManager.get('sid'));
       // > false
       ```
      '''</example>'''
@@ -123,21 +146,17 @@
       createSession();
     }
 
-    var timer;
-
-    function inputHandler() {
-      if (timer) {
-        return;
-      }
+    function inputHandler(e) {
       var now = Date.now();
-      timer = setTimeout(function() {
-        if (Date.now() - sessionStorage[storageKeys.liveTime] >= sessionExpires * 1000) {
-          createSession();
-        } else {
+
+      if (now - sessionStorage[storageKeys.sessionLiveTime] >= sessionExpires * 1000) {
+        createSession();
+      } else {
+        // setTimeout 避免多个 app 实例互相影响
+        setTimeout(function () {
           sessionStorage[storageKeys.sessionLiveTime] = now;
-        }
-        timer = null;
-      }, 1000);
+        });
+      }
     }
 
     [

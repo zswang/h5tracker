@@ -178,6 +178,15 @@
       console.log(typeof localStorage['h5t@storageList/h5t/send_case_2/send']);
       // > undefined
       ```
+     * @example send():event {}
+      ```js
+      var tracker = app.createTracker('h5t', 'send_case_3');
+      tracker.send({message: 'case_3'});
+      tracker.create({
+        accept: '/host/case3',
+        event: {}
+      });
+      ```
      '''</example>'''
      */
     function send(data) {
@@ -238,8 +247,7 @@
       tracker.info('info log.');
       tracker.warn('warn log.');
       tracker.fatal('fatal log.');
-      tracker.create({
-      });
+      tracker.create({});
 
       var data = JSON.parse(localStorage['h5t@storageList/h5t/log_case_1/log']);
 
@@ -253,16 +261,23 @@
       // > warn warn log.
       // > fatal fatal log.
       ```
+     * @example log():level is undefined
+      ```js
+      var tracker = app.createTracker('h5t', 'log_case_2');
+      tracker.log({});
+      tracker.create({});
+      ```
+     * @example log():event {}
+      ```js
+      var tracker = app.createTracker('h5t', 'log_case_3');
+      tracker.log('case3');
+      tracker.create({
+        event: {}
+      });
+      ```
      '''</example>'''
      */
     function log(data) {
-      if (!created) {
-        actionList.push({
-          name: 'log',
-          data: data
-        });
-        return;
-      }
       if (typeof data === 'string') {
         data = {
           message: data,
@@ -273,7 +288,13 @@
         console.error('log level is undefined.');
         return;
       }
-
+      if (!created) {
+        actionList.push({
+          name: 'log',
+          data: data
+        });
+        return;
+      }
       var item = {};
       Object.keys(data).forEach(function (key) {
         item[key] = data[key];

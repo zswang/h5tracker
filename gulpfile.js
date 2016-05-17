@@ -12,12 +12,27 @@ var connect = require('gulp-connect');
 var uglify = require('gulp-uglify');
 var open = require('gulp-open');
 var less = require('gulp-less');
+var examplejs = require('gulp-examplejs');
 var autoprefixer = require('gulp-autoprefixer');
 
 gulp.task('example', function() {
-  return gulp.src('example.jdists.js')
-    .pipe(jdists())
-    .pipe(rename('example.js'))
+  return gulp.src([
+    'src/**/*.js',
+    '!src/inline.js',
+    '!src/storage-keys.js'
+    ])
+    .pipe(examplejs({
+      header: `
+var dom = require('./lib/dom');
+global.window = dom.window;
+global.document = dom.document;
+global.localStorage = dom.localStorage;
+global.sessionStorage = dom.sessionStorage;
+
+require('../src/index.js');
+var app = window.h5t.app;
+      `
+    }))
     .pipe(gulp.dest('test'));
 });
 

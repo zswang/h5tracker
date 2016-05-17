@@ -96,6 +96,7 @@
       if (!list) {
         try {
           list = JSON.parse(storageInstance[storageListKey] || '[]');
+          timestamp = storageInstance[storageListTSKey];
         } catch (ex) {
           list = [];
         }
@@ -236,6 +237,63 @@
       console.log(data[1].data.message);
       // > click button3
       ```
+     * @example clean():localStorage JSON error
+      ```js
+      var storageList = app.createStorageList('h5t', 'clean_case2', 'log');
+      localStorage['h5t@storageList/h5t/clean_case2/log'] = '#error';
+      storageList.clean();
+      var data = JSON.parse(localStorage['h5t@storageList/h5t/clean_case2/log']);
+      console.log(data);
+      // > []
+      ```
+     * @example clean():localStorage timestamp change
+      ```js
+      var storageList = app.createStorageList('h5t', 'clean_case3', 'log');
+      storageList.push({
+        level: 'info',
+        message: 'click button1'
+      });
+      var data = JSON.parse(localStorage['h5t@storageList/h5t/clean_case3/log']);
+      data[0].birthday = 0;
+      localStorage['h5t@storageList/h5t/clean_case3/log'] = JSON.stringify(data);
+      localStorage['h5t@storageList/h5t/clean_case3/log/ts'] = 0;
+      storageList.clean();
+      data = JSON.parse(localStorage['h5t@storageList/h5t/clean_case3/log']);
+      console.log(data);
+      // > []
+
+      console.log(localStorage['h5t@storageList/h5t/clean_case3/log/ts'] !== '0');
+      // > true
+      ```
+     * @example clean():×2
+      ```js
+      var storageList = app.createStorageList('h5t', 'clean_case4', 'log');
+      storageList.clean();
+      storageList.clean();
+      ```
+     * @example clean():minExpiresTime
+      ```js
+      var storageList = app.createStorageList('h5t', 'clean_case5', 'log');
+      storageList.push({
+        level: 'info',
+        message: 'click button1'
+      });
+      storageList.push({
+        level: 'info',
+        message: 'click button2'
+      });
+      var data = JSON.parse(localStorage['h5t@storageList/h5t/clean_case5/log']);
+      data[0].expires = 0.001;
+      localStorage['h5t@storageList/h5t/clean_case5/log'] = JSON.stringify(data);
+      storageList.clean();
+      setTimeout(function () {
+        storageList.clean();
+        data = JSON.parse(localStorage['h5t@storageList/h5t/clean_case5/log']);
+        console.log(data.length);
+        // > 1
+        // * done
+      }, 100);
+      ```
      '''</example>'''
      */
     function clean() {
@@ -265,7 +323,6 @@
         }
         return true;
       });
-
       save();
       return count;
     }
@@ -288,6 +345,7 @@
         level: 'info',
         message: 'click button2'
       });
+      storageList.clean();
       storageList.remove(id1);
       var data = JSON.parse(localStorage['h5t@storageList/h5t/remove/log']);
       console.log(data.length);
@@ -302,7 +360,7 @@
 
       list = list.filter(function(item) {
         if (id === item.id) {
-          if (item.birthday + item.expires === minExpiresTime) {
+          if (item.birthday + item.expires * 1000 === minExpiresTime) {
             minExpiresTime = null;
           }
           return false;
@@ -334,6 +392,20 @@
       var data = JSON.parse(localStorage['h5t@storageList/h5t/update/send']);
       console.log(data[0].tried === 2);
       // > true
+      ```
+     * @example update():not exists
+      ```js
+      var storageList = app.createStorageList('h5t', 'update_case2', 'send');
+      var id1 = storageList.push({
+        level: 'info',
+        message: 'click button1'
+      });
+      storageList.update('null', {
+        level: 'debug'
+      });
+      var data = JSON.parse(localStorage['h5t@storageList/h5t/update_case2/send']);
+      console.log(data[0].data.level);
+      // > info
       ```
      '''</example>'''
      */

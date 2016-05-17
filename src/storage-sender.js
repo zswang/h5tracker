@@ -1,4 +1,4 @@
-(function () {
+(function() {
 
   /*<jdists encoding="fndep" import="./storage-list.js" depend="createStorageList">*/
   var createStorageList = require('./storage-list').createStorageList;
@@ -11,19 +11,81 @@
    '''<example>'''
    * @example createStorageSender():base
     ```js
-    var storageList = app.createStorageList('h5t', 'sender', 'send');
+    Object.keys(localStorage).forEach(function (key) {
+      if (/\/send($|\ts)/.test(key)) {
+        delete localStorage[key];
+      }
+    });
+    var storageList = app.createStorageList('h5t', 'sender1', 'send');
     storageList.push({
-      accept: 'http://host/path/to',
+      accept: 'http://host/path/to?from=timeline',
       query: 'level=info&message=click%20button1'
     });
     var sender = app.createStorageSender();
     sender.scan();
 
     setTimeout(function(){
-      console.log(localStorage['h5t@storageList/h5t/sender/send']);
+      console.log(localStorage['h5t@storageList/h5t/sender1/send']);
       // > []
-      //done();
+      // * done
+    }, 500);
+    ```
+   * @example createStorageSender():acceptStyle
+    ```js
+    Object.keys(localStorage).forEach(function (key) {
+      if (/\/send($|\ts)/.test(key)) {
+        delete localStorage[key];
+      }
+    });
+    var storageList = app.createStorageList('h5t', 'sender2', 'send');
+    storageList.push({
+      accept: 'http://host/path/to/?from=timeline',
+      acceptStyle: 'path',
+      query: 'level=info&message=click%20button1'
+    });
+    var sender = app.createStorageSender();
+    sender.scan();
+
+    setTimeout(function(){
+      console.log(localStorage['h5t@storageList/h5t/sender2/send']);
+      // > []
+      // * done
+    }, 500);
+    ```
+   * @example createStorageSender():accept Error
+    ```js
+    Object.keys(localStorage).forEach(function (key) {
+      if (/\/send($|\ts)/.test(key)) {
+        delete localStorage[key];
+      }
+    });
+    var storageList = app.createStorageList('h5t', 'sender3', 'send');
+    storageList.push({
+      accept: '/host/path#error',
+      query: 'level=info&message=click%20button1'
+    });
+    var sender = app.createStorageSender();
+    sender.scan();
+
+    setTimeout(function(){
+      console.log(!!localStorage['h5t@storageList/h5t/sender3/send']);
+      // > true
+      // * done
     }, 1100);
+    ```
+   * @example createStorageSender():accept is undefined
+    ```js
+    Object.keys(localStorage).forEach(function (key) {
+      if (/\/send($|\ts)/.test(key)) {
+        delete localStorage[key];
+      }
+    });
+    var storageList = app.createStorageList('h5t', 'sender4', 'send');
+    storageList.push({
+      query: 'level=info&message=click%20button1'
+    });
+    var sender = app.createStorageSender();
+    sender.scan();
     ```
    '''</example>'''
    */

@@ -2,9 +2,9 @@ var vm = new Vue({
   ready: function() {
     var _this = this;
     _this.getStorage();
-    setInterval(function() {
-      _this.getStorage();
-    }, 1000);
+    // setInterval(function() {
+    //   _this.getStorage();
+    // }, 1000);
   },
   el: '#app',
   data: {
@@ -13,7 +13,8 @@ var vm = new Vue({
       send: []
     },
     nowTime: Date.now(),
-    activatTab: 'log'
+    activatTab: 'log',
+    isSpread: false
   },
   methods: {
     getStorage: function() {
@@ -92,7 +93,12 @@ var vm = new Vue({
       });
     },
     toString: function(item) {
-      return JSON.stringify(item);
+      var queryArr = decodeURIComponent(item).split("&");
+      queryArr.join('<br>');
+      return queryArr.join('<i></i>');
+    },
+    spread: function(){
+      this.isSpread = !this.isSpread;
     }
   }
 });

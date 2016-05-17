@@ -82,7 +82,8 @@ li {
   display: block;
   border-top: 1px solid #fff;
 }
-#app .tabs .btns .clean {
+#app .tabs .btns .clean,
+#app .tabs .btns .spread {
   float: right;
   border: 1px solid #ddd;
   line-height: 2.2rem;
@@ -101,7 +102,7 @@ li {
   text-align: center;
   margin-right: 2px;
   line-height: 2.5rem;
-  padding: 0 2rem;
+  padding: 0 1.5rem;
 }
 #app .tabs .tab {
   border: 1px solid #ddd;
@@ -129,44 +130,44 @@ li {
   border-radius: 0.3rem;
   border: 1px solid #e0e0e0;
   margin-bottom: 2px;
-  line-height: 2.5rem;
+}
+#app .tabs .tab dl .spreadHeight {
+  height: 2.4rem;
 }
 #app .tabs .tab dl dt {
+  padding: 0.5rem 1rem;
   border-bottom: dashed 1px #e0e0e0;
+  overflow: hidden;
 }
 #app .tabs .tab dl dt span {
-  padding: 0 0.5rem;
-}
-#app .tabs .tab dl dt span:nth-of-type(2n) {
-  background: rgba(0, 0, 0, 0.1);
-}
-#app .tabs .tab dl dd span:nth-of-type(2) {
-  color: #000;
-  font-size: 1.2rem;
-  -webkit-box-flex: 4;
-      -ms-flex: 4;
-          flex: 4;
-}
-#app .tabs .tab dl dt,
-#app .tabs .tab dl dd {
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  padding: 0 1rem;
-}
-#app .tabs .tab dl dt span,
-#app .tabs .tab dl dd span {
-  -webkit-box-flex: 1;
-      -ms-flex: 1;
-          flex: 1;
   display: inline-block;
   vertical-align: top;
-  padding: 0 0.5rem;
-  width: 10rem;
+  width: 49%;
+  line-height: 1.5rem;
+}
+#app .tabs .tab dl dd {
+  background: rgba(0, 0, 0, 0.1);
+  padding: 0.5rem 1rem;
+  line-height: 2.5rem;
+}
+#app .tabs .tab dl dd span {
   word-break: break-all;
 }
-#app .tabs .tab dl dt p,
+#app .tabs .tab dl dd span:nth-of-type(1) {
+  display: inline-block;
+  vertical-align: top;
+  width: 5rem;
+}
 #app .tabs .tab dl dd p {
-  padding: 0 1rem;
   word-break: break-all;
+}
+#app .tabs .tab dl dd p strong {
+  display: block;
+  width: 100%;
+  border-bottom: 1px solid #ddd;
+}
+#app .tabs .tab dl dd p i {
+  display: block;
+  width: 100%;
+  border-top: 1px solid #d0d0d0;
 }

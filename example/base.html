@@ -39,7 +39,12 @@ h5t('speed.on', 'send', function(data) {
   delete data.dm;
   console.log('speed.on send data: %s', JSON.stringify(data));
 });
-
+h5t('pv.send', {
+  ht: 'pageview'
+});
+h5t('pv.create', {
+  accept: 'http://<!--jdists encoding="#debugAddress" /-->:3000/t.gif', // 日志接收地址
+})
 var timer = setTimeout(function() {
   h5t('speed.create', {
     accept: 'http://<!--jdists encoding="#debugAddress" /-->:3000/t.gif', // 日志接收地址

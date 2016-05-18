@@ -14,12 +14,15 @@
     <h2>Log查看器</h2>
     <div class="tabs">
       <ul class="btns">
-        <li v-for="(key, item) in tabs" v-on:click="activatTab=key" v-bind:class="{activat: activatTab===key}">{{key}}</li>
+        <li v-for="tab in tabs"
+          v-on:click="activatTab = tab"
+          v-bind:class="{activat: activatTab === tab}">{{tab}}</li>
         <li class="clean" v-on:click="clean(activatTab)">清除</li>
         <li class="spread" v-on:click="isSpread = !isSpread">{{isSpread ? '收回' : '展开'}}</li>
       </ul>
-      <div v-for="(key, tab) in tabs" v-show="activatTab===key" class="tab">
-        <dl v-for="item in tab" class="{{item.data.level}}">
+      <div v-for="tab in tabs" v-show="activatTab === tab" class="tab">
+        <dl v-for="item in $data[tab]"
+          class="{{item.data.level || ''}} {{item._removed ? 'removed' : ''}}">
           <dt class="{{isSpread || 'spreadHeight'}}">
             <span>ID: {{item.id}}</span>
             <span title="{{item._trackerName}}">追踪器: {{item._trackerName}}</span>
@@ -27,10 +30,10 @@
             <span>过期时间: {{getTimeout(item)}}</span>
             <span v-if="item.tried!==0">请求次数: {{item.tried}}</span>
           </dt>
-          <dd v-if="key==='log'"><span>{{item.data.level}} : </span><span>{{item.data.message}}</span></dd>
+          <dd v-if="tab==='log'"><span>{{item.data.level}} : </span><span>{{item.data.message}}</span></dd>
           <dd v-else>
-            <p v-for="(k, v) in item.data">
-              <strong>{{k}}</strong> {{{toString(v)}}}
+            <p v-for="(key, value) in item.data">
+              <strong>{{key}}</strong> {{{toString(value)}}}
             </p>
           </dd>
         </dl>

@@ -133,6 +133,9 @@ li {
 #app .tabs .tab dl .spreadHeight {
   height: 2.4rem;
 }
+#app .tabs .tab dl.removed {
+  background: #ff8585;
+}
 #app .tabs .tab dl dt {
   padding: 0.5rem 1rem;
   border-bottom: dashed 1px #e0e0e0;

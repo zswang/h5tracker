@@ -7,7 +7,7 @@
    * @author
    *   zswang (http://weibo.com/zswang)
    *   meglad (https://github.com/meglad)
-   * @version 0.0.205
+   * @version 0.0.207
    * @date 2016-05-18
    */
   /**
@@ -1353,12 +1353,12 @@
       tracker.set({
         x: 1,
         y: 2,
-        id: null
+        rid: null
       });
       tracker.send({z: 3});
       tracker.send({
         z: null,
-        id: null
+        rid: null
       });
       tracker.create({
         accept: '/host/case1',
@@ -1401,7 +1401,7 @@
       }
       // merge data
       var item = {
-        id: newGuid()
+        rid: newGuid() // record id
       };
       if (options.data) {
         Object.keys(options.data).forEach(function (key) {

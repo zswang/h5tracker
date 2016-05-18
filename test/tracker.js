@@ -82,12 +82,12 @@ describe("src/tracker.js", function () {
       tracker.set({
         x: 1,
         y: 2,
-        id: null
+        rid: null
       });
       tracker.send({z: 3});
       tracker.send({
         z: null,
-        id: null
+        rid: null
       });
       tracker.create({
         accept: '/host/case1',

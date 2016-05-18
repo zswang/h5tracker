@@ -2,9 +2,9 @@ var vm = new Vue({
   ready: function() {
     var _this = this;
     _this.getStorage();
-    // setInterval(function() {
-    //   _this.getStorage();
-    // }, 1000);
+    setInterval(function() {
+      _this.getStorage();
+    }, 1000);
   },
   el: '#app',
   data: {
@@ -34,33 +34,29 @@ var vm = new Vue({
         if (!match) {
           return;
         }
-        var keyName = match[0];
         var appName = match[1];
         var trackerName = match[2];
         var listName = match[3];
         if (['log', 'send'].indexOf(listName) === -1) {
           return;
         }
-        var logData = localStorage[keyName];
-        if (typeof logData !== 'Object') {
-          try {
-            logData = JSON.parse(logData);
-          } catch (ex) {
-            console.error('logData not is JSON');
-            return;
-          }
+        var logData = localStorage[key];
+
+        try {
+          logData = JSON.parse(logData);
+        } catch (ex) {
+          console.error('logData not is JSON');
+          return;
         }
 
         logData.map(function(item) {
           item._trackerName = appName + '/' + trackerName;
         });
-        _this.tabs[listName] = _this.tabs[listName].concat(logData);
-      });
-      _this.tabs.log.sort(function(a, b) {
-        return b.birthday - a.birthday;
-      });
-      _this.tabs.send.sort(function(a, b) {
-        return b.birthday - a.birthday;
+        _this.tabs[listName] = _this.tabs[listName]
+          .concat(logData)
+          .sort(function(a, b) {
+            return b.birthday - a.birthday;
+          });
       });
     },
     getTimeout: function(item) {
@@ -85,20 +81,15 @@ var vm = new Vue({
         if (!match) {
           return;
         }
-        var keyName = match[0];
         var listName = match[3];
         if (listName === activatTab) {
-          localStorage[keyName] = '[]';
+          localStorage[key] = '[]';
         }
       });
     },
     toString: function(item) {
       var queryArr = decodeURIComponent(item).split("&");
-      queryArr.join('<br>');
       return queryArr.join('<i></i>');
-    },
-    spread: function(){
-      this.isSpread = !this.isSpread;
     }
   }
 });

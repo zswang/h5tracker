@@ -17,9 +17,9 @@ var autoprefixer = require('gulp-autoprefixer');
 
 gulp.task('example', function() {
   return gulp.src([
-    'src/**/*.js',
-    '!src/inline.js',
-    '!src/storage-keys.js'
+      'src/**/*.js',
+      '!src/inline.js',
+      '!src/storage-keys.js'
     ])
     .pipe(examplejs({
       header: `
@@ -101,7 +101,7 @@ gulp.task('connect', function() {
 });
 
 gulp.task('html', function() {
-  gulp.src(['./example/*.html', './tools/**/*.html|css|js'])
+  gulp.src(['./example/*.html','./tools/(*.html)|(css/*.css)|(js/*.js)'])
     .pipe(connect.reload());
 });
 
@@ -117,13 +117,13 @@ gulp.task('less', function() {
     .pipe(less())
     .pipe(autoprefixer({
       cascade: true,
-      remove:true
+      remove: true
     }))
     .pipe(gulp.dest('./tools/css/'));
 })
 
 gulp.task('watch', function() {
-  gulp.watch(['src/*.js', 'example/*.html', './tools/**/*.*'], ['buildDev', 'buildInline', 'html' ,'less']);
+  gulp.watch(['src/*.js', 'example/*.html', 'tools/**/*.*'], ['buildDev', 'buildInline', 'html', 'less']);
 });
 
 gulp.task('debug', ['buildDev', 'buildInline', 'html', 'connect', 'open', 'watch']);

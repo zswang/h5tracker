@@ -16,7 +16,7 @@
       <ul class="btns">
         <li v-for="(key, item) in tabs" v-on:click="activatTab=key" v-bind:class="{activat: activatTab===key}">{{key}}</li>
         <li class="clean" v-on:click="clean(activatTab)">清除</li>
-        <li class="spread" v-on:click="spread()">{{isSpread ? '收回' : '展开'}}</li>
+        <li class="spread" v-on:click="isSpread = !isSpread">{{isSpread ? '收回' : '展开'}}</li>
       </ul>
       <div v-for="(key, tab) in tabs" v-show="activatTab===key" class="tab">
         <dl v-for="item in tab" class="{{item.data.level}}">
@@ -30,8 +30,8 @@
           <dd v-if="key==='log'"><span>{{item.data.level}} : </span><span>{{item.data.message}}</span></dd>
           <dd v-else>
             <p v-for="(k, v) in item.data">
-            <strong>{{k}}</strong>
-            {{{toString(v)}}}<i></i></p>
+              <strong>{{k}}</strong> {{{toString(v)}}}
+            </p>
           </dd>
         </dl>
       </div>

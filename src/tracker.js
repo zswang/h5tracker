@@ -205,7 +205,7 @@
       /*</safe>*/
       // merge data
       var item = {
-        id: newGuid()
+        rid: newGuid() // record id
       };
       if (options.data) {
         Object.keys(options.data).forEach(function (key) {

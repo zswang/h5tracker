@@ -1,0 +1,28 @@
+{
+  "name": "h5tacker",
+  "main": "h5tacker.js",
+  "description": "Logs Tracker of Mobile",
+  "author": [
+    {
+      "name": "zswang",
+      "url": "http://weibo.com/zswang"
+    },
+    {
+      "name": "meglad",
+      "url": "https://github.com/meglad"
+    }
+  ],
+  "license": "MIT",
+  "ignore": [
+    ".*",
+    "examples",
+    "build",
+    "perf",
+    "test",
+    "grunt",
+    "gruntfile.js",
+    "*.json",
+    "*.md",
+    "*.yml"
+  ]
+}

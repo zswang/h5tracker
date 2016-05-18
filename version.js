@@ -8,3 +8,11 @@ package.version = package.version.replace(/-?\d+$/, function(value) {
 });
 
 fs.writeFileSync(filename, JSON.stringify(package, null, '  '));
+
+var filename = path.join(__dirname, 'bower.json');
+var bower = JSON.parse(fs.readFileSync(filename));
+bower.version = package.version;
+bower.description = package.description;
+bower.keywords = package.keywords;
+
+fs.writeFileSync(filename, JSON.stringify(bower, null, '  '));

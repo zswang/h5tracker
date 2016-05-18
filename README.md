@@ -1,6 +1,8 @@
 h5tracker 移动端页面统计框架
 -----
 
+# [![NPM version][npm-image]][npm-url] [![Build Status][travis-image]][travis-url] [![Coverage Status][coverage-image]][coverage-url]
+
 ## Features（功能点）
 
 1. Offline Storage.（离线存储）
@@ -115,3 +117,14 @@ trn  | tracker name  | 追踪器名 | 默认 null
   status: "resume" // "resume": 活动， "pause": 挂起
 }
 ```
+
+## License
+
+MIT © [zswang](http://weibo.com/zswang)
+
+[npm-url]: https://npmjs.org/package/h5tracker
+[npm-image]: https://badge.fury.io/js/h5tracker.svg
+[travis-url]: https://travis-ci.org/zswang/h5tracker
+[travis-image]: https://travis-ci.org/zswang/h5tracker.svg?branch=master
+[coverage-url]: https://coveralls.io/github/zswang/h5tracker?branch=master
+[coverage-image]: https://coveralls.io/repos/zswang/h5tracker/badge.svg?branch=master&service=github

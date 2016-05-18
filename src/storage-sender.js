@@ -183,7 +183,7 @@
     instance.scan = scan;
 
     return instance;
-  };
+  }
   /*</function>*/
 
   exports.createStorageSender = createStorageSender;

@@ -78,7 +78,7 @@ window[name]('set', 'debug', true);
     app.cmd.apply(app, arguments);
   };
   instance.app = app;
-  instance.defined = true
+  instance.defined = true;
 
   if (oldObject) {
     // 处理临时 h5t 对象

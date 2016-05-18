@@ -219,7 +219,7 @@
         item[key] = data[key];
       });
       if (options.event) {
-        var fn = options.event['send'];
+        var fn = options.event.send;
         if (typeof fn === 'function') {
           fn.call(instance, item);
         }
@@ -304,7 +304,7 @@
         item[key] = data[key];
       });
       if (options.event) {
-        var fn = options.event['log'];
+        var fn = options.event.log;
         if (typeof fn === 'function') {
           fn.call(instance, item);
         }

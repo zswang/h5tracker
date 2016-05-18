@@ -7,7 +7,7 @@
    * @author
    *   zswang (http://weibo.com/zswang)
    *   meglad (https://github.com/meglad)
-   * @version 0.0.197
+   * @version 0.0.198
    * @date 2016-05-18
    */
   /**
@@ -209,7 +209,7 @@
     var guid = parseInt(Math.random() * 36);
     return function newGuid() {
       return Date.now().toString(36) + (guid++ % 36).toString(36) + Math.random().toString(36).slice(2, 4);
-    }
+    };
   })();
   /*</function>*/
   /*<function name="format">*/
@@ -940,7 +940,7 @@
     }
     instance.scan = scan;
     return instance;
-  };
+  }
   /*</function>*/
   /*<function name="queryFrom">*/
   /**
@@ -1415,7 +1415,7 @@
         item[key] = data[key];
       });
       if (options.event) {
-        var fn = options.event['send'];
+        var fn = options.event.send;
         if (typeof fn === 'function') {
           fn.call(instance, item);
         }
@@ -1492,7 +1492,7 @@
         item[key] = data[key];
       });
       if (options.event) {
-        var fn = options.event['log'];
+        var fn = options.event.log;
         if (typeof fn === 'function') {
           fn.call(instance, item);
         }
@@ -1677,7 +1677,7 @@
     app.cmd.apply(app, arguments);
   };
   instance.app = app;
-  instance.defined = true
+  instance.defined = true;
   if (oldObject) {
     // 处理临时 h5t 对象
     var items = [].concat(oldObject.p || [], oldObject.q || []);

@@ -1,4 +1,5 @@
 (function() {
+  'use strict';
 
   /*<jdists encoding="fndep" import="./common.js" depend="newGuid,format,queryFrom">*/
   var newGuid = require('./common').newGuid;

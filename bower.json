@@ -14,15 +14,21 @@
   ],
   "license": "MIT",
   "ignore": [
-    ".*",
-    "examples",
-    "build",
-    "perf",
+    "src",
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "app/components",
     "test",
-    "grunt",
-    "gruntfile.js",
-    "*.json",
-    "*.md",
-    "*.yml"
+    "tests",
+    "gulpfile.js",
+    "example",
+    "tools"
+  ],
+  "version": "0.0.205",
+  "keywords": [
+    "tracker",
+    "log",
+    "localStorage"
   ]
 }

@@ -98,6 +98,7 @@
      */
     instance.get = createGetter(instance, function (name) {
       if (typeof storageInstance[storageKeys.sessionId] === 'undefined') {
+        console.info('sessionManager get createSession');
         createSession();
       }
       return storageInstance[fieldsKey[name]];
@@ -168,9 +169,15 @@
     }
     instance.destroySession = destroySession;
 
-    if (!storageInstance[storageKeys.sessionId]) {
-      createSession();
+    /**
+     * 初始化 session
+     */
+    function init() {
+      if (!storageInstance[storageKeys.sessionId]) {
+        createSession();
+      }
     }
+    instance.init = init;
 
     function inputHandler(e) {
       var now = Date.now();

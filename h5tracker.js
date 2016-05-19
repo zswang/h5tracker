@@ -7,7 +7,7 @@
    * @author
    *   zswang (http://weibo.com/zswang)
    *   meglad (https://github.com/meglad)
-   * @version 0.0.224
+   * @version 0.0.230
    * @date 2016-05-19
    */
   /**
@@ -1182,6 +1182,7 @@
      */
     instance.get = createGetter(instance, function (name) {
       if (typeof storageInstance[storageKeys.sessionId] === 'undefined') {
+        console.info('sessionManager get createSession');
         createSession();
       }
       return storageInstance[fieldsKey[name]];
@@ -1243,9 +1244,15 @@
       }
     }
     instance.destroySession = destroySession;
-    if (!storageInstance[storageKeys.sessionId]) {
-      createSession();
+    /**
+     * 初始化 session
+     */
+    function init() {
+      if (!storageInstance[storageKeys.sessionId]) {
+        createSession();
+      }
     }
+    instance.init = init;
     function inputHandler(e) {
       var now = Date.now();
       if (now - storageInstance[storageKeys.sessionLiveTime] >= sessionExpires * 1000) {
@@ -1461,13 +1468,7 @@
       Object.keys(data).forEach(function (key) {
         item[key] = data[key];
       });
-      if (options.event) {
-        var fn = options.event.send;
-        if (typeof fn === 'function') {
-          fn.call(instance, item);
-        }
-      }
-      instance.emit('send', item);
+      emitEvent('send', item);
       storage.send(item, options.accept, options.acceptStyle);
     }
     instance.send = send;
@@ -1538,13 +1539,7 @@
       Object.keys(data).forEach(function (key) {
         item[key] = data[key];
       });
-      if (options.event) {
-        var fn = options.event.log;
-        if (typeof fn === 'function') {
-          fn.call(instance, item);
-        }
-      }
-      instance.emit('log', item);
+      emitEvent('log', item);
       storage.log(item);
     }
     instance.log = log;
@@ -1583,6 +1578,19 @@
       actionList = null;
     }
     instance.create = create;
+    /**
+     * 配置事件通知
+     */
+    function emitEvent(name, data) {
+      if (options && options.event) {
+        var fn = options.event[name];
+        if (typeof fn === 'function') {
+          fn.call(instance, data);
+        }
+      }
+      instance.emit(name, data);
+    }
+    instance.emitEvent = emitEvent;
     return instance;
   }
   /*</function>*/
@@ -1634,15 +1642,27 @@
     var sessionManager = createSessionManager(sessionExpires);
     sessionManager.on('createSession', function() {
       Object.keys(trackers).forEach(function(key) {
-        trackers[key].emit('createSession');
+        trackers[key].emitEvent('createSession');
       });
     });
     sessionManager.on('destroySession', function() {
       Object.keys(trackers).forEach(function(key) {
-        trackers[key].emit('destroySession');
+        trackers[key].emitEvent('destroySession');
       });
     });
-    /*=== 生命周期 ===*/
+    var commandArgvList = [];
+    /**
+     * 初始化应用
+     */
+    function init() {
+      sessionManager.init();
+      var items = commandArgvList;
+      commandArgvList = null;
+      items.forEach(function (argv) {
+        cmd.apply(instance, argv);
+      });
+    }
+    instance.init = init;
     /**
      * 执行命令
      *
@@ -1702,7 +1722,11 @@
         tracker = instance;
       }
       if (typeof tracker[methodName] === 'function') {
-        if (methodName === 'send') {
+        if (methodName === 'send' || methodName === 'log') {
+          if (commandArgvList) {
+            commandArgvList.push(arguments);
+            return;
+          }
           tracker.set({
             uid: userId,
             sid: sessionManager.get('sid'),
@@ -1739,4 +1763,5 @@
     });
   }
   window[objectName] = instance;
+  app.init();
 })(document, window);

@@ -1,6 +1,6 @@
 {
   "name": "h5tracker",
-  "version": "0.0.224",
+  "version": "0.0.230",
   "main": "h5tracker.js",
   "description": "Logs Tracker of Mobile",
   "repository": {
@@ -21,7 +21,7 @@
     "lint": "jshint src/*.js",
     "test": "istanbul cover --hook-run-in-context node_modules/mocha/bin/_mocha -- -R spec",
     "mocha": "npm run example && mocha",
-    "mocha2": "mocha test/app.js"
+    "mocha2": "mocha test/tracker.js"
   },
   "license": "MIT",
   "bugs": {

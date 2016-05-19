@@ -235,13 +235,7 @@
       Object.keys(data).forEach(function (key) {
         item[key] = data[key];
       });
-      if (options.event) {
-        var fn = options.event.send;
-        if (typeof fn === 'function') {
-          fn.call(instance, item);
-        }
-      }
-      instance.emit('send', item);
+      emitEvent('send', item);
       storage.send(item, options.accept, options.acceptStyle);
     }
     instance.send = send;
@@ -320,13 +314,7 @@
       Object.keys(data).forEach(function (key) {
         item[key] = data[key];
       });
-      if (options.event) {
-        var fn = options.event.log;
-        if (typeof fn === 'function') {
-          fn.call(instance, item);
-        }
-      }
-      instance.emit('log', item);
+      emitEvent('log', item);
       /*<debug>*/
       // console[data.level].call(console, data.message);
       /*</debug>*/
@@ -382,6 +370,20 @@
       actionList = null;
     }
     instance.create = create;
+
+    /**
+     * 配置事件通知
+     */
+    function emitEvent(name, data) {
+      if (options && options.event) {
+        var fn = options.event[name];
+        if (typeof fn === 'function') {
+          fn.call(instance, data);
+        }
+      }
+      instance.emit(name, data);
+    }
+    instance.emitEvent = emitEvent;
 
     return instance;
   }

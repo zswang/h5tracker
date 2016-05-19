@@ -106,17 +106,29 @@
     var sessionManager = createSessionManager(sessionExpires);
     sessionManager.on('createSession', function() {
       Object.keys(trackers).forEach(function(key) {
-        trackers[key].emit('createSession');
+        trackers[key].emitEvent('createSession');
       });
     });
 
     sessionManager.on('destroySession', function() {
       Object.keys(trackers).forEach(function(key) {
-        trackers[key].emit('destroySession');
+        trackers[key].emitEvent('destroySession');
       });
     });
 
-    /*=== 生命周期 ===*/
+    var commandArgvList = [];
+    /**
+     * 初始化应用
+     */
+    function init() {
+      sessionManager.init();
+      var items = commandArgvList;
+      commandArgvList = null;
+      items.forEach(function (argv) {
+        cmd.apply(instance, argv);
+      });
+    }
+    instance.init = init;
 
     /**
      * 执行命令
@@ -195,7 +207,12 @@
       }
 
       if (typeof tracker[methodName] === 'function') {
-        if (methodName === 'send') {
+        if (methodName === 'send' || methodName === 'log') {
+          if (commandArgvList) {
+            commandArgvList.push(arguments);
+            return;
+          }
+
           tracker.set({
             uid: userId,
             sid: sessionManager.get('sid'),

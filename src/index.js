@@ -3,6 +3,7 @@ var name = 'h5t';
 window[name] = function(cmd, src) {
   (window[name].q = window[name].q || []).push(arguments);
 };
+window[name]('log', 'test');
 window[name]('set', 'debug', true);
 window.localStorage = null;
 window.sessionStorage = null;
@@ -87,7 +88,6 @@ window.sessionStorage = null;
   };
   instance.app = app;
   instance.defined = true;
-
   if (oldObject) {
     // 处理临时 h5t 对象
     var items = [].concat(oldObject.p || [], oldObject.q || []);
@@ -102,5 +102,6 @@ window.sessionStorage = null;
     });
   }
   window[objectName] = instance;
+  app.init();
 
 })(document, window);

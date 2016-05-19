@@ -7,8 +7,8 @@
    * @author
    *   zswang (http://weibo.com/zswang)
    *   meglad (https://github.com/meglad)
-   * @version 0.0.207
-   * @date 2016-05-18
+   * @version 0.0.224
+   * @date 2016-05-19
    */
   /**
    '''<example>'''
@@ -42,6 +42,12 @@
   var oldObject = window[objectName];
   if (oldObject && oldObject.defined) { // 避免重复加载
     return;
+  }
+  if (!window.localStorage) { // 兼容底端浏览器
+    window.localStorage = {};
+  }
+  if (!window.sessionStorage) {
+    window.sessionStorage = {};
   }
   /*<function name="camelCase">*/
   /**
@@ -1119,7 +1125,7 @@
     var liveTime = sessionStorage['h5t@global/sessionLiveTime'];
     console.log(sessionSeq >= 0);
     // > true
-    console.log(birthday && birthday === liveTime);
+    console.log(Math.abs(birthday - liveTime) < 10);
     // > true
     console.log(sessionId === sessionManager.get('sid'));
     // > true
@@ -1152,7 +1158,32 @@
       birthday: storageKeys.sessionBirthday,
       liveTime: storageKeys.sessionLiveTime,
     };
+    /**
+     * 获取 session 字段
+     *
+     * @param {string} name
+     * @return {string} 返回字段值
+     '''<example>'''
+     * @example get():base
+      ```js
+      var sessionManager = app.createSessionManager();
+      console.log(sessionStorage['h5t@global/sessionId'] === sessionManager.get('sid'));
+      // > true
+      ```
+     * @example get():safe
+      ```js
+      var sessionManager = app.createSessionManager();
+      delete sessionStorage['h5t@global/sessionId'];
+      sessionManager.get('sid');
+      console.log(typeof sessionStorage['h5t@global/sessionId']);
+      // > string
+      ```
+     '''</example>'''
+     */
     instance.get = createGetter(instance, function (name) {
+      if (typeof storageInstance[storageKeys.sessionId] === 'undefined') {
+        createSession();
+      }
       return storageInstance[fieldsKey[name]];
     }, true);
     /**
@@ -1198,8 +1229,8 @@
       // > true
       sessionManager.destroySession();
       sessionManager.destroySession();
-      console.log(!!sessionManager.get('sid'));
-      // > false
+      console.log(typeof sessionStorage['h5t@global/sessionId']);
+      // > undefined
       ```
      '''</example>'''
      */
@@ -1389,6 +1420,17 @@
         event: {}
       });
       ```
+     * @example send():string
+      ```js
+      var tracker = app.createTracker('h5t', 'send_case_4');
+      tracker.send('pageview');
+      tracker.create({
+        accept: '/host/case4'
+      });
+      var data = JSON.parse(localStorage['h5t@storageList/h5t/send_case_4/send']);
+      console.log(/ht=pageview/.test(data[0].data.query));
+      // > true
+      ```
      '''</example>'''
      */
     function send(data) {
@@ -1411,6 +1453,11 @@
       Object.keys(fields).forEach(function (key) {
         item[key] = fields[key];
       });
+      if (typeof data === 'string') {
+        data = {
+          ht: data // hit type // "event" | "pageview" | "appview"
+        };
+      }
       Object.keys(data).forEach(function (key) {
         item[key] = data[key];
       });

@@ -2,8 +2,8 @@
 var dom = require('./lib/dom');
 global.window = dom.window;
 global.document = dom.document;
-global.localStorage = dom.localStorage;
-global.sessionStorage = dom.sessionStorage;
+window.localStorage = window.localStorage || {};
+window.sessionStorage = window.sessionStorage || {};
 
 require('../src/index.js');
 var app = window.h5t.app;
@@ -121,6 +121,18 @@ describe("src/tracker.js", function () {
         accept: '/host/case3',
         event: {}
       });
+  });
+  it("send():string", function() {
+    examplejs_printLines = [];
+      var tracker = app.createTracker('h5t', 'send_case_4');
+      tracker.send('pageview');
+      tracker.create({
+        accept: '/host/case4'
+      });
+
+      var data = JSON.parse(localStorage['h5t@storageList/h5t/send_case_4/send']);
+      examplejs_print(/ht=pageview/.test(data[0].data.query));
+      assert.equal(examplejs_printLines.join("\n"), "true"); examplejs_printLines = [];
   });
   it("log():case 1", function() {
     examplejs_printLines = [];

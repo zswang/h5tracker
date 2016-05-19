@@ -2,8 +2,8 @@
 var dom = require('./lib/dom');
 global.window = dom.window;
 global.document = dom.document;
-global.localStorage = dom.localStorage;
-global.sessionStorage = dom.sessionStorage;
+window.localStorage = window.localStorage || {};
+window.sessionStorage = window.sessionStorage || {};
 
 require('../src/index.js');
 var app = window.h5t.app;
@@ -27,7 +27,7 @@ describe("src/session-manager.js", function () {
     examplejs_print(sessionSeq >= 0);
     assert.equal(examplejs_printLines.join("\n"), "true"); examplejs_printLines = [];
 
-    examplejs_print(birthday && birthday === liveTime);
+    examplejs_print(Math.abs(birthday - liveTime) < 10);
     assert.equal(examplejs_printLines.join("\n"), "true"); examplejs_printLines = [];
 
     examplejs_print(sessionId === sessionManager.get('sid'));
@@ -52,6 +52,20 @@ describe("src/session-manager.js", function () {
       assert.equal(examplejs_printLines.join("\n"), "true"); examplejs_printLines = [];
       done();
     }, 1500);
+  });
+  it("get():base", function() {
+    examplejs_printLines = [];
+      var sessionManager = app.createSessionManager();
+      examplejs_print(sessionStorage['h5t@global/sessionId'] === sessionManager.get('sid'));
+      assert.equal(examplejs_printLines.join("\n"), "true"); examplejs_printLines = [];
+  });
+  it("get():safe", function() {
+    examplejs_printLines = [];
+      var sessionManager = app.createSessionManager();
+      delete sessionStorage['h5t@global/sessionId'];
+      sessionManager.get('sid');
+      examplejs_print(typeof sessionStorage['h5t@global/sessionId']);
+      assert.equal(examplejs_printLines.join("\n"), "string"); examplejs_printLines = [];
   });
   it("createSession():base", function() {
     examplejs_printLines = [];
@@ -78,7 +92,7 @@ describe("src/session-manager.js", function () {
       sessionManager.destroySession();
       sessionManager.destroySession();
 
-      examplejs_print(!!sessionManager.get('sid'));
-      assert.equal(examplejs_printLines.join("\n"), "false"); examplejs_printLines = [];
+      examplejs_print(typeof sessionStorage['h5t@global/sessionId']);
+      assert.equal(examplejs_printLines.join("\n"), "undefined"); examplejs_printLines = [];
   });
 });

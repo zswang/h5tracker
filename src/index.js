@@ -4,6 +4,8 @@ window[name] = function(cmd, src) {
   (window[name].q = window[name].q || []).push(arguments);
 };
 window[name]('set', 'debug', true);
+window.localStorage = null;
+window.sessionStorage = null;
 /*</remove>*/
 
 (function(document, window) {
@@ -62,6 +64,12 @@ window[name]('set', 'debug', true);
   var oldObject = window[objectName];
   if (oldObject && oldObject.defined) { // 避免重复加载
     return;
+  }
+  if (!window.localStorage) { // 兼容底端浏览器
+    window.localStorage = {};
+  }
+  if (!window.sessionStorage) {
+    window.sessionStorage = {};
   }
 
   /*<jdists encoding="fndep" import="./app.js" depend="createApp">*/

@@ -34,7 +34,7 @@
     console.log(sessionSeq >= 0);
     // > true
 
-    console.log(birthday && birthday === liveTime);
+    console.log(Math.abs(birthday - liveTime) < 10);
     // > true
 
     console.log(sessionId === sessionManager.get('sid'));
@@ -74,7 +74,32 @@
       liveTime: storageKeys.sessionLiveTime,
     };
 
+    /**
+     * 获取 session 字段
+     *
+     * @param {string} name
+     * @return {string} 返回字段值
+     '''<example>'''
+     * @example get():base
+      ```js
+      var sessionManager = app.createSessionManager();
+      console.log(sessionStorage['h5t@global/sessionId'] === sessionManager.get('sid'));
+      // > true
+      ```
+     * @example get():safe
+      ```js
+      var sessionManager = app.createSessionManager();
+      delete sessionStorage['h5t@global/sessionId'];
+      sessionManager.get('sid');
+      console.log(typeof sessionStorage['h5t@global/sessionId']);
+      // > string
+      ```
+     '''</example>'''
+     */
     instance.get = createGetter(instance, function (name) {
+      if (typeof storageInstance[storageKeys.sessionId] === 'undefined') {
+        createSession();
+      }
       return storageInstance[fieldsKey[name]];
     }, true);
 
@@ -128,8 +153,8 @@
       sessionManager.destroySession();
       sessionManager.destroySession();
 
-      console.log(!!sessionManager.get('sid'));
-      // > false
+      console.log(typeof sessionStorage['h5t@global/sessionId']);
+      // > undefined
       ```
      '''</example>'''
      */

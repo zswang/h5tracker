@@ -30,12 +30,13 @@ h5t('config', {
 
 ```js
 h5t('main.create', {
-  accept: 'http://log.server.com/c.gif', // 日志接收地址
+  accept: 'http://log.server.com/c.gif', // 日志接收地址 // send 时必须带上
+  acceptStyle: 'query', // 日志接收方式，"query": 查询参数，"path": 路径，默认为: "query"
   data: { // 常规数据
-    dm: document.location.domain,
+    dm: document.domain,
     lo: document.location.pathname
   },
-  event: {
+  event: { // 事件
     send: function (data) { // 发送数据时触发
       data.token = this.token(data);
     },
@@ -55,6 +56,7 @@ h5t('main.send', { // 发送数据
   path: 'xxx' //
 });
 ```
+
 ## Data Struct（数据结构式）
 
 ### App 数据

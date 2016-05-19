@@ -187,6 +187,18 @@
         event: {}
       });
       ```
+     * @example send():string
+      ```js
+      var tracker = app.createTracker('h5t', 'send_case_4');
+      tracker.send('pageview');
+      tracker.create({
+        accept: '/host/case4'
+      });
+
+      var data = JSON.parse(localStorage['h5t@storageList/h5t/send_case_4/send']);
+      console.log(/ht=pageview/.test(data[0].data.query));
+      // > true
+      ```
      '''</example>'''
      */
     function send(data) {
@@ -215,6 +227,11 @@
       Object.keys(fields).forEach(function (key) {
         item[key] = fields[key];
       });
+      if (typeof data === 'string') {
+        data = {
+          ht: data // hit type // "event" | "pageview" | "appview"
+        };
+      }
       Object.keys(data).forEach(function (key) {
         item[key] = data[key];
       });

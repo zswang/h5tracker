@@ -174,6 +174,14 @@ class HTMLWindow extends EventTarget {
   get sessionStorage() {
     return this._sessionStorage;
   }
+  set localStorage(value) {
+    this._localStorage = value;
+    global.localStorage = value;
+  }
+  set sessionStorage(value) {
+    this._sessionStorage = value;
+    global.sessionStorage = value;
+  }
   get document() {
     return this._document;
   }

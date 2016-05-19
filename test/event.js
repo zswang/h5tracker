@@ -2,8 +2,8 @@
 var dom = require('./lib/dom');
 global.window = dom.window;
 global.document = dom.document;
-global.localStorage = dom.localStorage;
-global.sessionStorage = dom.sessionStorage;
+window.localStorage = window.localStorage || {};
+window.sessionStorage = window.sessionStorage || {};
 
 require('../src/index.js');
 var app = window.h5t.app;

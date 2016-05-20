@@ -7,8 +7,8 @@
    * @author
    *   zswang (http://weibo.com/zswang)
    *   meglad (https://github.com/meglad)
-   * @version 0.0.230
-   * @date 2016-05-19
+   * @version 0.0.231
+   * @date 2016-05-20
    */
   /**
    '''<example>'''
@@ -1335,10 +1335,6 @@
     instance.name = trackerName;
     var storage = createStorage(appName, trackerName);
     /**
-     * 是否被创建过
-     */
-    var created;
-    /**
      * 字段列表
      *
      * @type {Object}
@@ -1441,7 +1437,7 @@
      '''</example>'''
      */
     function send(data) {
-      if (!created) {
+      if (actionList) {
         actionList.push({
           name: 'send',
           data: data
@@ -1528,7 +1524,7 @@
           level: 'debug'
         };
       }
-      if (!created) {
+      if (actionList) {
         actionList.push({
           name: 'log',
           data: data
@@ -1570,25 +1566,25 @@
      '''</example>'''
      */
     function create(opts) {
-      created = true;
       options = opts;
-      actionList.forEach(function (item) {
+      var temp = actionList;
+      actionList = null;
+      temp.forEach(function (item) {
         instance[item.name](item.data);
       });
-      actionList = null;
     }
     instance.create = create;
     /**
      * 配置事件通知
      */
-    function emitEvent(name, data) {
+    function emitEvent(name) {
       if (options && options.event) {
         var fn = options.event[name];
         if (typeof fn === 'function') {
-          fn.call(instance, data);
+          fn.apply(instance, [].slice.call(arguments, 1));
         }
       }
-      instance.emit(name, data);
+      instance.emit.apply(instance, arguments);
     }
     instance.emitEvent = emitEvent;
     return instance;
@@ -1710,7 +1706,6 @@
       var match = line.match(/^(?:([\w$_]+)\.)?(\w+)$/);
       var trackerName = match[1];
       var methodName = match[2];
-      var methodArgs = [].slice.call(arguments, 1);
       // console.log('trackerName: %s, methodName: %s', trackerName, methodName);
       var tracker;
       if (trackerName) {
@@ -1734,7 +1729,7 @@
             time: (Date.now() - sessionManager.get('birthday')).toString(36)
           });
         }
-        return tracker[methodName].apply(tracker, methodArgs);
+        return tracker[methodName].apply(tracker, [].slice.call(arguments, 1));
       } else {
         console.error('Tracker method "%s" is invalid.', methodName);
       }

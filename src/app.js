@@ -193,8 +193,6 @@
       var trackerName = match[1];
       var methodName = match[2];
 
-      var methodArgs = [].slice.call(arguments, 1);
-
       // console.log('trackerName: %s, methodName: %s', trackerName, methodName);
       var tracker;
       if (trackerName) {
@@ -220,7 +218,7 @@
             time: (Date.now() - sessionManager.get('birthday')).toString(36)
           });
         }
-        return tracker[methodName].apply(tracker, methodArgs);
+        return tracker[methodName].apply(tracker, [].slice.call(arguments, 1));
       } else {
         console.error('Tracker method "%s" is invalid.', methodName);
       }

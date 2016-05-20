@@ -1,6 +1,6 @@
 {
   "name": "h5tracker",
-  "version": "0.0.230",
+  "version": "0.0.231",
   "main": "h5tracker.js",
   "description": "Logs Tracker of Mobile",
   "repository": {

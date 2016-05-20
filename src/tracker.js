@@ -86,11 +86,6 @@
     var storage = createStorage(appName, trackerName);
 
     /**
-     * 是否被创建过
-     */
-    var created;
-
-    /**
      * 字段列表
      *
      * @type {Object}
@@ -202,7 +197,7 @@
      '''</example>'''
      */
     function send(data) {
-      if (!created) {
+      if (actionList) {
         actionList.push({
           name: 'send',
           data: data
@@ -239,6 +234,7 @@
       storage.send(item, options.accept, options.acceptStyle);
     }
     instance.send = send;
+
     /**
      * 打印日志
      *
@@ -303,7 +299,7 @@
         return;
       }
       /*</safe>*/
-      if (!created) {
+      if (actionList) {
         actionList.push({
           name: 'log',
           data: data
@@ -351,7 +347,7 @@
      */
     function create(opts) {
       /*<safe>*/
-      if (created) {
+      if (!actionList) {
         console.error('Cannot duplicate create tracker.');
         return;
       }
@@ -360,28 +356,26 @@
         return;
       }
       /*</safe>*/
-      created = true;
       options = opts;
-
-      actionList.forEach(function (item) {
+      var temp = actionList;
+      actionList = null;
+      temp.forEach(function (item) {
         instance[item.name](item.data);
       });
-
-      actionList = null;
     }
     instance.create = create;
 
     /**
      * 配置事件通知
      */
-    function emitEvent(name, data) {
+    function emitEvent(name) {
       if (options && options.event) {
         var fn = options.event[name];
         if (typeof fn === 'function') {
-          fn.call(instance, data);
+          fn.apply(instance, [].slice.call(arguments, 1));
         }
       }
-      instance.emit(name, data);
+      instance.emit.apply(instance, arguments);
     }
     instance.emitEvent = emitEvent;
 

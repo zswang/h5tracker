@@ -81,11 +81,20 @@
     console.log('createApp() appName: %s', appName);
     /*</remove>*/
 
-    var userId = localStorage[storageKeys.userId];
-    if (!userId) {
-      userId = localStorage[storageKeys.userId] = newGuid();
-    }
-    var instance = createTracker(appName, appName);
+    var sessionManager = createSessionManager(sessionExpires);
+    sessionManager.on('createSession', function() {
+      Object.keys(trackers).forEach(function(key) {
+        trackers[key].emitEvent('createSession');
+      });
+    });
+
+    sessionManager.on('destroySession', function() {
+      Object.keys(trackers).forEach(function(key) {
+        trackers[key].emitEvent('destroySession');
+      });
+    });
+
+    var instance = createTracker(appName, appName, sessionManager);
 
     /*<remove trigger="release">*/
     instance.createEmitter = createEmitter;
@@ -102,19 +111,6 @@
     /*</remove>*/
 
     trackers[appName] = instance;
-
-    var sessionManager = createSessionManager(sessionExpires);
-    sessionManager.on('createSession', function() {
-      Object.keys(trackers).forEach(function(key) {
-        trackers[key].emitEvent('createSession');
-      });
-    });
-
-    sessionManager.on('destroySession', function() {
-      Object.keys(trackers).forEach(function(key) {
-        trackers[key].emitEvent('destroySession');
-      });
-    });
 
     var commandArgvList = [];
     /**
@@ -198,7 +194,7 @@
       if (trackerName) {
         tracker = trackers[trackerName];
         if (!tracker) {
-          tracker = trackers[trackerName] = createTracker(appName, trackerName);
+          tracker = trackers[trackerName] = createTracker(appName, trackerName, sessionManager);
         }
       } else {
         tracker = instance;
@@ -210,13 +206,6 @@
             commandArgvList.push(arguments);
             return;
           }
-
-          tracker.set({
-            uid: userId,
-            sid: sessionManager.get('sid'),
-            seq: sessionManager.get('seq'),
-            time: (Date.now() - sessionManager.get('birthday')).toString(36)
-          });
         }
         return tracker[methodName].apply(tracker, [].slice.call(arguments, 1));
       } else {

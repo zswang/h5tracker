@@ -74,6 +74,11 @@
       liveTime: storageKeys.sessionLiveTime,
     };
 
+    var userId = localStorage[storageKeys.userId];
+    if (!userId) {
+      userId = localStorage[storageKeys.userId] = newGuid();
+    }
+
     /**
      * 获取 session 字段
      *
@@ -97,6 +102,9 @@
      '''</example>'''
      */
     instance.get = createGetter(instance, function (name) {
+      if (name === 'uid') {
+        return userId;
+      }
       if (typeof storageInstance[storageKeys.sessionId] === 'undefined') {
         console.info('sessionManager get createSession');
         createSession();

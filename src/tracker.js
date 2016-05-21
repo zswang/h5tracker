@@ -74,7 +74,7 @@
     ```
    '''</example>'''
    */
-  function createTracker(appName, trackerName) {
+  function createTracker(appName, trackerName, sessionManager) {
     /**
      * 追踪器实例
      *
@@ -211,8 +211,14 @@
       }
       /*</safe>*/
       // merge data
-      var item = {
-        rid: newGuid() // record id
+      var item = sessionManager ? {
+        rid: newGuid(), // record id
+        uid: sessionManager.get('uid'),
+        sid: sessionManager.get('sid'),
+        seq: sessionManager.get('seq'),
+        time: (Date.now() - sessionManager.get('birthday')).toString(36)
+      } : {
+        rid: newGuid()
       };
       if (options.data) {
         Object.keys(options.data).forEach(function (key) {

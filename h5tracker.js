@@ -7,8 +7,8 @@
    * @author
    *   zswang (http://weibo.com/zswang)
    *   meglad (https://github.com/meglad)
-   * @version 0.0.231
-   * @date 2016-05-20
+   * @version 0.0.234
+   * @date 2016-05-21
    */
   /**
    '''<example>'''
@@ -1158,6 +1158,10 @@
       birthday: storageKeys.sessionBirthday,
       liveTime: storageKeys.sessionLiveTime,
     };
+    var userId = localStorage[storageKeys.userId];
+    if (!userId) {
+      userId = localStorage[storageKeys.userId] = newGuid();
+    }
     /**
      * 获取 session 字段
      *
@@ -1181,6 +1185,9 @@
      '''</example>'''
      */
     instance.get = createGetter(instance, function (name) {
+      if (name === 'uid') {
+        return userId;
+      }
       if (typeof storageInstance[storageKeys.sessionId] === 'undefined') {
         console.info('sessionManager get createSession');
         createSession();
@@ -1325,7 +1332,7 @@
     ```
    '''</example>'''
    */
-  function createTracker(appName, trackerName) {
+  function createTracker(appName, trackerName, sessionManager) {
     /**
      * 追踪器实例
      *
@@ -1445,8 +1452,14 @@
         return;
       }
       // merge data
-      var item = {
-        rid: newGuid() // record id
+      var item = sessionManager ? {
+        rid: newGuid(), // record id
+        uid: sessionManager.get('uid'),
+        sid: sessionManager.get('sid'),
+        seq: sessionManager.get('seq'),
+        time: (Date.now() - sessionManager.get('birthday')).toString(36)
+      } : {
+        rid: newGuid()
       };
       if (options.data) {
         Object.keys(options.data).forEach(function (key) {
@@ -1629,12 +1642,6 @@
    */
   function createApp(appName, sessionExpires) {
     appName = appName || 'h5t';
-    var userId = localStorage[storageKeys.userId];
-    if (!userId) {
-      userId = localStorage[storageKeys.userId] = newGuid();
-    }
-    var instance = createTracker(appName, appName);
-    trackers[appName] = instance;
     var sessionManager = createSessionManager(sessionExpires);
     sessionManager.on('createSession', function() {
       Object.keys(trackers).forEach(function(key) {
@@ -1646,6 +1653,8 @@
         trackers[key].emitEvent('destroySession');
       });
     });
+    var instance = createTracker(appName, appName, sessionManager);
+    trackers[appName] = instance;
     var commandArgvList = [];
     /**
      * 初始化应用
@@ -1711,7 +1720,7 @@
       if (trackerName) {
         tracker = trackers[trackerName];
         if (!tracker) {
-          tracker = trackers[trackerName] = createTracker(appName, trackerName);
+          tracker = trackers[trackerName] = createTracker(appName, trackerName, sessionManager);
         }
       } else {
         tracker = instance;
@@ -1722,12 +1731,6 @@
             commandArgvList.push(arguments);
             return;
           }
-          tracker.set({
-            uid: userId,
-            sid: sessionManager.get('sid'),
-            seq: sessionManager.get('seq'),
-            time: (Date.now() - sessionManager.get('birthday')).toString(36)
-          });
         }
         return tracker[methodName].apply(tracker, [].slice.call(arguments, 1));
       } else {

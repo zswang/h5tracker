@@ -20,25 +20,33 @@
    * @param {string} appName 应用名
    * @param {string} trackerName 追踪器名
    * @param {string} listName 列表名称
-   * @param {Object} storageInstance 存储实例 localStorage | sessionStorage
-   * @param {number} storageExpires 存储记录过期时间，单位：秒，默认：864000(10天)
-   * @param {number} storageMaxCount 存储的最大记录数，默认：1000
+   * @param {Object} storageConfig 存储配置项
    * @return {Object} 返回存储列表对象
    '''<example>'''
-   * @example createStorageList():storageInstance => sessionStorage
+   * @example createStorageList():localStorageProxy assigned
     ```js
-    var storageList = app.createStorageList('h5t', 'base1', 'log', sessionStorage);
+    var localStorageProxy = {};
+    var oldLocalStorageProxy = app.storageConfig.localStorageProxy;
+    app.storageConfig.localStorageProxy = localStorageProxy;
+
+    var sessionManager = app.createSessionManager(app.storageConfig);
+    var storageList = app.createStorageList('h5t', 'base1', 'log', app.storageConfig);
     storageList.push({
       level: 'info',
       message: 'click button1'
     });
-    var data = JSON.parse(sessionStorage['h5t@storageList/h5t/base1/log']);
+    var data = JSON.parse(localStorageProxy['h5t@storageList/h5t/base1/log']);
     console.log(data.length);
     // > 1
+    app.storageConfig.localStorageProxy = oldLocalStorageProxy;
     ```
    * @example createStorageList():storageExpires => 10000
     ```js
-    var storageList = app.createStorageList('h5t', 'base2', 'log', localStorage, 10000);
+    var oldStorageExpires = app.storageConfig.storageExpires;
+    app.storageConfig.storageExpires = 10000;
+
+    var localStorage = app.storageConfig.localStorageProxy;
+    var storageList = app.createStorageList('h5t', 'base2', 'log', app.storageConfig);
     storageList.push({
       level: 'info',
       message: 'click button1'
@@ -46,14 +54,15 @@
     var data = JSON.parse(localStorage['h5t@storageList/h5t/base2/log']);
     console.log(data[0].expires);
     // > 10000
+
+    app.storageConfig.storageExpires = oldStorageExpires;
     ```
    '''</example>'''
    */
-  function createStorageList(appName, trackerName, listName, storageInstance, storageExpires, storageMaxCount) {
+  function createStorageList(appName, trackerName, listName, storageConfig) {
+
     // 参数默认值
-    storageInstance = storageInstance || localStorage;
-    storageExpires = storageExpires || 864000; // 10 * 24 * 60 * 60
-    storageMaxCount = storageMaxCount || 1000;
+    var storageInstance = storageConfig.localStorageProxy;
 
     var instance = {};
     var scope = {
@@ -119,7 +128,8 @@
      '''<example>'''
      * @example push():base
       ```js
-      var storageList = app.createStorageList('h5t', 'push_case_1', 'log');
+      var localStorage = app.storageConfig.localStorageProxy;
+      var storageList = app.createStorageList('h5t', 'push_case_1', 'log', app.storageConfig);
       storageList.push({
         level: 'info',
         message: 'click button1'
@@ -138,7 +148,10 @@
       ```
      * @example push():storageMaxCount = 5
       ```js
-      var storageList = app.createStorageList('h5t', 'push_case_2', 'log', null, null, 5);
+      var localStorage = app.storageConfig.localStorageProxy;
+      var oldStorageMaxCount = app.storageConfig.storageMaxCount;
+      app.storageConfig.storageMaxCount = 5;
+      var storageList = app.createStorageList('h5t', 'push_case_2', 'log', app.storageConfig);
       for (var i = 0; i < 6; i++ ) {
         storageList.push({
           level: 'info',
@@ -148,6 +161,7 @@
       var data = JSON.parse(localStorage['h5t@storageList/h5t/push_case_2/log']);
       console.log(data.length);
       // > 5
+      app.storageConfig.storageMaxCount = oldStorageMaxCount;
       ```
      '''</example>'''
      */
@@ -156,13 +170,13 @@
 
       var id = newGuid();
       var birthday = Date.now();
-      while (list.length >= storageMaxCount) { // 清除历史数据
+      while (list.length >= storageConfig.storageMaxCount) { // 清除历史数据
         list.shift();
       }
       list.push({
         id: id,
         birthday: birthday,
-        expires: storageExpires,
+        expires: storageConfig.storageExpires,
         tried: 0, // 尝试发送次数
         data: data
       });
@@ -179,7 +193,8 @@
      '''<example>'''
      * @example toArray():base
       ```js
-      var storageList = app.createStorageList('h5t', 'toArray', 'log');
+      var localStorage = app.storageConfig.localStorageProxy;
+      var storageList = app.createStorageList('h5t', 'toArray', 'log', app.storageConfig);
       storageList.push({
         level: 'info',
         message: 'click button1'
@@ -210,7 +225,8 @@
      '''<example>'''
      * @example clean():base
       ```js
-      var storageList = app.createStorageList('h5t', 'clean', 'log');
+      var localStorage = app.storageConfig.localStorageProxy;
+      var storageList = app.createStorageList('h5t', 'clean', 'log', app.storageConfig);
       storageList.push({
         level: 'info',
         message: 'click button1'
@@ -239,7 +255,8 @@
       ```
      * @example clean():localStorage JSON error
       ```js
-      var storageList = app.createStorageList('h5t', 'clean_case2', 'log');
+      var localStorage = app.storageConfig.localStorageProxy;
+      var storageList = app.createStorageList('h5t', 'clean_case2', 'log', app.storageConfig);
       localStorage['h5t@storageList/h5t/clean_case2/log'] = '#error';
       storageList.clean();
       var data = JSON.parse(localStorage['h5t@storageList/h5t/clean_case2/log']);
@@ -248,7 +265,8 @@
       ```
      * @example clean():localStorage timestamp change
       ```js
-      var storageList = app.createStorageList('h5t', 'clean_case3', 'log');
+      var localStorage = app.storageConfig.localStorageProxy;
+      var storageList = app.createStorageList('h5t', 'clean_case3', 'log', app.storageConfig);
       storageList.push({
         level: 'info',
         message: 'click button1'
@@ -267,13 +285,14 @@
       ```
      * @example clean():×2
       ```js
-      var storageList = app.createStorageList('h5t', 'clean_case4', 'log');
+      var storageList = app.createStorageList('h5t', 'clean_case4', 'log', app.storageConfig);
       storageList.clean();
       storageList.clean();
       ```
      * @example clean():minExpiresTime
       ```js
-      var storageList = app.createStorageList('h5t', 'clean_case5', 'log');
+      var localStorage = app.storageConfig.localStorageProxy;
+      var storageList = app.createStorageList('h5t', 'clean_case5', 'log', app.storageConfig);
       storageList.push({
         level: 'info',
         message: 'click button1'
@@ -285,6 +304,7 @@
       var data = JSON.parse(localStorage['h5t@storageList/h5t/clean_case5/log']);
       data[0].expires = 0.001;
       localStorage['h5t@storageList/h5t/clean_case5/log'] = JSON.stringify(data);
+      storageList.clean();
       storageList.clean();
       setTimeout(function () {
         storageList.clean();
@@ -336,7 +356,8 @@
      '''<example>'''
      * @example remove():base
       ```js
-      var storageList = app.createStorageList('h5t', 'remove', 'log');
+      var localStorage = app.storageConfig.localStorageProxy;
+      var storageList = app.createStorageList('h5t', 'remove', 'log', app.storageConfig);
       var id1 = storageList.push({
         level: 'info',
         message: 'click button1'
@@ -381,7 +402,8 @@
      '''<example>'''
      * @example update():base
       ```js
-      var storageList = app.createStorageList('h5t', 'update', 'send');
+      var localStorage = app.storageConfig.localStorageProxy;
+      var storageList = app.createStorageList('h5t', 'update', 'send', app.storageConfig);
       var id1 = storageList.push({
         level: 'info',
         message: 'click button1'
@@ -395,7 +417,8 @@
       ```
      * @example update():not exists
       ```js
-      var storageList = app.createStorageList('h5t', 'update_case2', 'send');
+      var localStorage = app.storageConfig.localStorageProxy;
+      var storageList = app.createStorageList('h5t', 'update_case2', 'send', app.storageConfig);
       var id1 = storageList.push({
         level: 'info',
         message: 'click button1'
@@ -430,7 +453,8 @@
      '''<example>'''
      * @example get():base
       ```js
-      var storageList = app.createStorageList('h5t', 'get', 'send');
+      var localStorage = app.storageConfig.localStorageProxy;
+      var storageList = app.createStorageList('h5t', 'get', 'send', app.storageConfig);
       var id1 = storageList.push({
         level: 'info',
         message: 'click button1'

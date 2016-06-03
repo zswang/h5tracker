@@ -12,27 +12,21 @@
   var createEmitter = require('./event').createEmitter;
   /*</jdists>*/
 
-  /*<jdists encoding="fndep" import="./storage-sender.js" depend="createStorageSender">*/
-  var createStorageSender = require('./storage-sender').createStorageSender;
-  /*</jdists>*/
-
-  /*<function name="createStorage" depend="createStorageList,createEmitter,createStorageSender,queryFrom">*/
-  var storageSender = createStorageSender();
-
+  /*<function name="createStorage" depend="createStorageList,createEmitter,queryFrom">*/
   /**
    * 创建存储器
    *
    * @param {string} appName 应用名
    * @param {string} trackerName 追踪器名
+   * @param {Object} storageConfig 存储配置
    * @return {Object} 返回存储器
    */
-  function createStorage(appName, trackerName) {
+  function createStorage(appName, trackerName, storageConfig) {
 
     var instance = createEmitter();
 
-    var storageListSend = createStorageList(appName, trackerName, 'send');
-    var storageListLog = createStorageList(appName, trackerName, 'log');
-    storageSender.scan();
+    var storageListSend = createStorageList(appName, trackerName, 'send', storageConfig);
+    var storageListLog = createStorageList(appName, trackerName, 'log', storageConfig);
 
     /**
      * 记录日志
@@ -43,7 +37,9 @@
     function log(data) {
       storageListLog.clean();
 
-      return storageListLog.push(data);
+      var result = storageListLog.push(data);
+      instance.emit('log');
+      return result;
     }
     instance.log = log;
 
@@ -56,7 +52,8 @@
      '''<example>'''
      * @example send():base
       ```js
-      var storage = app.createStorage('h5t', 'send');
+      var localStorage = app.storageConfig.localStorageProxy;
+      var storage = app.createStorage('h5t', 'send', app.storageConfig);
       var id = storage.send({
         hisType: 'pageview'
       }, '/host/path/to/t.gif');
@@ -74,7 +71,8 @@
       ```
      * @example send():acceptStyle
       ```js
-      var storage = app.createStorage('h5t', 'send2');
+      var localStorage = app.storageConfig.localStorageProxy;
+      var storage = app.createStorage('h5t', 'send2', app.storageConfig);
       storage.send({
         hisType: 'pageview'
       }, '/host/path/to/t.gif', 'path');
@@ -86,7 +84,7 @@
       ```
      * @example send():accept is undefined
       ```js
-      var storage = app.createStorage('h5t', 'send3');
+      var storage = app.createStorage('h5t', 'send3', app.storageConfig);
       storage.send({
         hisType: 'pageview'
       });
@@ -107,7 +105,7 @@
         acceptStyle: acceptStyle, // 发送格式 "path" | "query"
         query: queryFrom(data),
       });
-      storageSender.scan();
+      instance.emit('send');
       return id;
     }
     instance.send = send;

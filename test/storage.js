@@ -18,7 +18,8 @@ describe("src/storage.js", function () {
 
   it("send():base", function() {
     examplejs_printLines = [];
-      var storage = app.createStorage('h5t', 'send');
+      var localStorage = app.storageConfig.localStorageProxy;
+      var storage = app.createStorage('h5t', 'send', app.storageConfig);
       var id = storage.send({
         hisType: 'pageview'
       }, '/host/path/to/t.gif');
@@ -36,7 +37,8 @@ describe("src/storage.js", function () {
   });
   it("send():acceptStyle", function() {
     examplejs_printLines = [];
-      var storage = app.createStorage('h5t', 'send2');
+      var localStorage = app.storageConfig.localStorageProxy;
+      var storage = app.createStorage('h5t', 'send2', app.storageConfig);
       storage.send({
         hisType: 'pageview'
       }, '/host/path/to/t.gif', 'path');
@@ -48,7 +50,7 @@ describe("src/storage.js", function () {
   });
   it("send():accept is undefined", function() {
     examplejs_printLines = [];
-      var storage = app.createStorage('h5t', 'send3');
+      var storage = app.createStorage('h5t', 'send3', app.storageConfig);
       storage.send({
         hisType: 'pageview'
       });

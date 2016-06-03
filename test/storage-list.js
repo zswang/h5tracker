@@ -16,20 +16,30 @@ describe("src/storage-list.js", function () {
     examplejs_printLines.push(util.format.apply(util, arguments));
   }
 
-  it("createStorageList():storageInstance => sessionStorage", function() {
+  it("createStorageList():localStorageProxy assigned", function() {
     examplejs_printLines = [];
-    var storageList = app.createStorageList('h5t', 'base1', 'log', sessionStorage);
+    var localStorageProxy = {};
+    var oldLocalStorageProxy = app.storageConfig.localStorageProxy;
+    app.storageConfig.localStorageProxy = localStorageProxy;
+
+    var sessionManager = app.createSessionManager(app.storageConfig);
+    var storageList = app.createStorageList('h5t', 'base1', 'log', app.storageConfig);
     storageList.push({
       level: 'info',
       message: 'click button1'
     });
-    var data = JSON.parse(sessionStorage['h5t@storageList/h5t/base1/log']);
+    var data = JSON.parse(localStorageProxy['h5t@storageList/h5t/base1/log']);
     examplejs_print(data.length);
     assert.equal(examplejs_printLines.join("\n"), "1"); examplejs_printLines = [];
+    app.storageConfig.localStorageProxy = oldLocalStorageProxy;
   });
   it("createStorageList():storageExpires => 10000", function() {
     examplejs_printLines = [];
-    var storageList = app.createStorageList('h5t', 'base2', 'log', localStorage, 10000);
+    var oldStorageExpires = app.storageConfig.storageExpires;
+    app.storageConfig.storageExpires = 10000;
+
+    var localStorage = app.storageConfig.localStorageProxy;
+    var storageList = app.createStorageList('h5t', 'base2', 'log', app.storageConfig);
     storageList.push({
       level: 'info',
       message: 'click button1'
@@ -37,10 +47,13 @@ describe("src/storage-list.js", function () {
     var data = JSON.parse(localStorage['h5t@storageList/h5t/base2/log']);
     examplejs_print(data[0].expires);
     assert.equal(examplejs_printLines.join("\n"), "10000"); examplejs_printLines = [];
+
+    app.storageConfig.storageExpires = oldStorageExpires;
   });
   it("push():base", function() {
     examplejs_printLines = [];
-      var storageList = app.createStorageList('h5t', 'push_case_1', 'log');
+      var localStorage = app.storageConfig.localStorageProxy;
+      var storageList = app.createStorageList('h5t', 'push_case_1', 'log', app.storageConfig);
       storageList.push({
         level: 'info',
         message: 'click button1'
@@ -59,7 +72,10 @@ describe("src/storage-list.js", function () {
   });
   it("push():storageMaxCount = 5", function() {
     examplejs_printLines = [];
-      var storageList = app.createStorageList('h5t', 'push_case_2', 'log', null, null, 5);
+      var localStorage = app.storageConfig.localStorageProxy;
+      var oldStorageMaxCount = app.storageConfig.storageMaxCount;
+      app.storageConfig.storageMaxCount = 5;
+      var storageList = app.createStorageList('h5t', 'push_case_2', 'log', app.storageConfig);
       for (var i = 0; i < 6; i++ ) {
         storageList.push({
           level: 'info',
@@ -69,10 +85,12 @@ describe("src/storage-list.js", function () {
       var data = JSON.parse(localStorage['h5t@storageList/h5t/push_case_2/log']);
       examplejs_print(data.length);
       assert.equal(examplejs_printLines.join("\n"), "5"); examplejs_printLines = [];
+      app.storageConfig.storageMaxCount = oldStorageMaxCount;
   });
   it("toArray():base", function() {
     examplejs_printLines = [];
-      var storageList = app.createStorageList('h5t', 'toArray', 'log');
+      var localStorage = app.storageConfig.localStorageProxy;
+      var storageList = app.createStorageList('h5t', 'toArray', 'log', app.storageConfig);
       storageList.push({
         level: 'info',
         message: 'click button1'
@@ -90,7 +108,8 @@ describe("src/storage-list.js", function () {
   });
   it("clean():base", function() {
     examplejs_printLines = [];
-      var storageList = app.createStorageList('h5t', 'clean', 'log');
+      var localStorage = app.storageConfig.localStorageProxy;
+      var storageList = app.createStorageList('h5t', 'clean', 'log', app.storageConfig);
       storageList.push({
         level: 'info',
         message: 'click button1'
@@ -119,7 +138,8 @@ describe("src/storage-list.js", function () {
   });
   it("clean():localStorage JSON error", function() {
     examplejs_printLines = [];
-      var storageList = app.createStorageList('h5t', 'clean_case2', 'log');
+      var localStorage = app.storageConfig.localStorageProxy;
+      var storageList = app.createStorageList('h5t', 'clean_case2', 'log', app.storageConfig);
       localStorage['h5t@storageList/h5t/clean_case2/log'] = '#error';
       storageList.clean();
       var data = JSON.parse(localStorage['h5t@storageList/h5t/clean_case2/log']);
@@ -128,7 +148,8 @@ describe("src/storage-list.js", function () {
   });
   it("clean():localStorage timestamp change", function() {
     examplejs_printLines = [];
-      var storageList = app.createStorageList('h5t', 'clean_case3', 'log');
+      var localStorage = app.storageConfig.localStorageProxy;
+      var storageList = app.createStorageList('h5t', 'clean_case3', 'log', app.storageConfig);
       storageList.push({
         level: 'info',
         message: 'click button1'
@@ -147,13 +168,14 @@ describe("src/storage-list.js", function () {
   });
   it("clean():×2", function() {
     examplejs_printLines = [];
-      var storageList = app.createStorageList('h5t', 'clean_case4', 'log');
+      var storageList = app.createStorageList('h5t', 'clean_case4', 'log', app.storageConfig);
       storageList.clean();
       storageList.clean();
   });
   it("clean():minExpiresTime", function(done) {
     examplejs_printLines = [];
-      var storageList = app.createStorageList('h5t', 'clean_case5', 'log');
+      var localStorage = app.storageConfig.localStorageProxy;
+      var storageList = app.createStorageList('h5t', 'clean_case5', 'log', app.storageConfig);
       storageList.push({
         level: 'info',
         message: 'click button1'
@@ -166,6 +188,7 @@ describe("src/storage-list.js", function () {
       data[0].expires = 0.001;
       localStorage['h5t@storageList/h5t/clean_case5/log'] = JSON.stringify(data);
       storageList.clean();
+      storageList.clean();
       setTimeout(function () {
         storageList.clean();
         data = JSON.parse(localStorage['h5t@storageList/h5t/clean_case5/log']);
@@ -176,7 +199,8 @@ describe("src/storage-list.js", function () {
   });
   it("remove():base", function() {
     examplejs_printLines = [];
-      var storageList = app.createStorageList('h5t', 'remove', 'log');
+      var localStorage = app.storageConfig.localStorageProxy;
+      var storageList = app.createStorageList('h5t', 'remove', 'log', app.storageConfig);
       var id1 = storageList.push({
         level: 'info',
         message: 'click button1'
@@ -195,7 +219,8 @@ describe("src/storage-list.js", function () {
   });
   it("update():base", function() {
     examplejs_printLines = [];
-      var storageList = app.createStorageList('h5t', 'update', 'send');
+      var localStorage = app.storageConfig.localStorageProxy;
+      var storageList = app.createStorageList('h5t', 'update', 'send', app.storageConfig);
       var id1 = storageList.push({
         level: 'info',
         message: 'click button1'
@@ -209,7 +234,8 @@ describe("src/storage-list.js", function () {
   });
   it("update():not exists", function() {
     examplejs_printLines = [];
-      var storageList = app.createStorageList('h5t', 'update_case2', 'send');
+      var localStorage = app.storageConfig.localStorageProxy;
+      var storageList = app.createStorageList('h5t', 'update_case2', 'send', app.storageConfig);
       var id1 = storageList.push({
         level: 'info',
         message: 'click button1'
@@ -223,7 +249,8 @@ describe("src/storage-list.js", function () {
   });
   it("get():base", function() {
     examplejs_printLines = [];
-      var storageList = app.createStorageList('h5t', 'get', 'send');
+      var localStorage = app.storageConfig.localStorageProxy;
+      var storageList = app.createStorageList('h5t', 'get', 'send', app.storageConfig);
       var id1 = storageList.push({
         level: 'info',
         message: 'click button1'

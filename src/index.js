@@ -66,21 +66,25 @@ window.sessionStorage = null;
   if (oldObject && oldObject.defined) { // 避免重复加载
     return;
   }
-  if (!window.localStorage) { // 兼容底端浏览器
-    window.localStorage = {};
-  }
-  if (!window.sessionStorage) {
-    window.sessionStorage = {};
-  }
+  var storageConfig = {
+    // 兼容低端浏览器（比如：小米1 华为荣耀6）
+    localStorageProxy: window.localStorage || {},
+    sessionStorageProxy: window.sessionStorage || {},
+
+    sessionExpires: 30,
+    storageExpires: 10 * 24 * 60 * 60,
+    storageMaxCount: 200
+  };
 
   /*<jdists encoding="fndep" import="./app.js" depend="createApp">*/
   var createApp = require('./app').createApp;
   /*</jdists>*/
 
-  var app = createApp(objectName);
+  var app = createApp(objectName, storageConfig);
   /*<remove>*/
   app.entery = arguments.callee;
   app.oldEntery = oldObject;
+  app.storageConfig = storageConfig;
   /*</remove>*/
 
   var instance = function() {

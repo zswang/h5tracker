@@ -18,7 +18,8 @@ describe("src/session-manager.js", function () {
 
   it("createSessionManager():base", function() {
     examplejs_printLines = [];
-    var sessionManager = app.createSessionManager();
+    var sessionStorage = app.storageConfig.sessionStorageProxy;
+    var sessionManager = app.createSessionManager(app.storageConfig);
     var sessionId = sessionStorage['h5t@global/sessionId'];
     var sessionSeq = sessionStorage['h5t@global/sessionSeq'];
     var birthday = sessionStorage['h5t@global/sessionBirthday'];
@@ -45,9 +46,12 @@ describe("src/session-manager.js", function () {
   it("createSessionManager():sessionExpires => 1", function(done) {
     examplejs_printLines = [];
     var timeout = 1;
-    var sessionManager = app.createSessionManager(timeout);
+    var oldSesssionExpires = app.storageConfig.sessionExpires;
+    app.storageConfig.sessionExpires = timeout;
+    var sessionManager = app.createSessionManager(app.storageConfig);
 
     setTimeout(function(){
+      app.storageConfig.sessionExpires = oldSesssionExpires;
       examplejs_print(Date.now() - sessionManager.get('liveTime') > timeout * 1000);
       assert.equal(examplejs_printLines.join("\n"), "true"); examplejs_printLines = [];
       done();
@@ -55,13 +59,15 @@ describe("src/session-manager.js", function () {
   });
   it("get():base", function() {
     examplejs_printLines = [];
-      var sessionManager = app.createSessionManager();
+      var sessionStorage = app.storageConfig.sessionStorageProxy;
+      var sessionManager = app.createSessionManager(app.storageConfig);
       examplejs_print(sessionStorage['h5t@global/sessionId'] === sessionManager.get('sid'));
       assert.equal(examplejs_printLines.join("\n"), "true"); examplejs_printLines = [];
   });
   it("get():safe", function() {
     examplejs_printLines = [];
-      var sessionManager = app.createSessionManager();
+      var sessionStorage = app.storageConfig.sessionStorageProxy;
+      var sessionManager = app.createSessionManager(app.storageConfig);
       delete sessionStorage['h5t@global/sessionId'];
       sessionManager.get('sid');
       examplejs_print(typeof sessionStorage['h5t@global/sessionId']);
@@ -69,7 +75,7 @@ describe("src/session-manager.js", function () {
   });
   it("createSession():base", function() {
     examplejs_printLines = [];
-      var sessionManager = app.createSessionManager();
+      var sessionManager = app.createSessionManager(app.storageConfig);
       var sessionId = sessionManager.get('sid');
 
       examplejs_print(!!sessionId);
@@ -84,7 +90,8 @@ describe("src/session-manager.js", function () {
   });
   it("destroySession():base", function() {
     examplejs_printLines = [];
-      var sessionManager = app.createSessionManager();
+      var sessionStorage = app.storageConfig.sessionStorageProxy;
+      var sessionManager = app.createSessionManager(app.storageConfig);
 
       examplejs_print(!!sessionManager.get('sid'));
       assert.equal(examplejs_printLines.join("\n"), "true"); examplejs_printLines = [];

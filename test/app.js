@@ -18,18 +18,21 @@ describe("src/app.js", function () {
 
   it("createApp():base", function() {
     examplejs_printLines = [];
-    var appInstance = app.createApp('cctv1');
+    var appInstance = app.createApp('cctv1', app.storageConfig);
     examplejs_print(appInstance.name);
     assert.equal(examplejs_printLines.join("\n"), "cctv1"); examplejs_printLines = [];
 
-    var appInstance = app.createApp();
+    var appInstance = app.createApp('', app.storageConfig);
     examplejs_print(appInstance.name);
     assert.equal(examplejs_printLines.join("\n"), "h5t"); examplejs_printLines = [];
   });
   it("createApp():sessionExpires => 1", function(done) {
     examplejs_printLines = [];
-    var appInstance = app.createApp('cctv2', 1);
-    appInstance.on('createSession', function () {
+    var oldSessionExpires = app.storageConfig.sessionExpires;
+    app.storageConfig.sessionExpires = 1;
+    var appInstance = app.createApp('cctv2', app.storageConfig);
+    appInstance.once('createSession', function () {
+      app.storageConfig.sessionExpires = oldSessionExpires;
       examplejs_print(appInstance.name);
       assert.equal(examplejs_printLines.join("\n"), "cctv2"); examplejs_printLines = [];
       done();
@@ -72,6 +75,7 @@ describe("src/app.js", function () {
       app.cmd('create', {
         accept: '/host/path/to'
       });
+      var localStorage = app.storageConfig.localStorageProxy;
       var list = JSON.parse(localStorage['h5t@storageList/h5t/h5t/send']);
       examplejs_print(/event=click/.test(list[0].data.query));
       assert.equal(examplejs_printLines.join("\n"), "true"); examplejs_printLines = [];

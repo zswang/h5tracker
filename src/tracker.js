@@ -1,4 +1,4 @@
-(function () {
+(function() {
 
   /*<jdists encoding="fndep" import="./event.js" depend="createEmitter">*/
   var createEmitter = require('./event').createEmitter;
@@ -26,7 +26,7 @@
    '''<example>'''
    * @example createTracker():base
     ```js
-    var tracker = app.createTracker('base');
+    var tracker = app.createTracker('h5t', 'base', app.sessionManager, app.storageSender, app.storageConfig);
     var count = 0;
     tracker.error('error1');
     tracker.send({
@@ -74,7 +74,7 @@
     ```
    '''</example>'''
    */
-  function createTracker(appName, trackerName, sessionManager) {
+  function createTracker(appName, trackerName, sessionManager, storageSender, storageConfig) {
     /**
      * 追踪器实例
      *
@@ -83,7 +83,10 @@
     var instance = createEmitter();
     instance.name = trackerName;
 
-    var storage = createStorage(appName, trackerName);
+    var storage = createStorage(appName, trackerName, storageConfig);
+    storage.on('send', function() { // 立即触发日志发送
+      storageSender.scan();
+    });
 
     /**
      * 字段列表
@@ -97,7 +100,7 @@
      '''<example>'''
      * @example set() & get():base
       ```js
-      var tracker = app.createTracker('setter');
+      var tracker = app.createTracker('h5t', 'setter', app.sessionManager, app.storageSender, app.storageConfig);
       tracker.set({
         x: 1,
         y: 2
@@ -110,10 +113,10 @@
       ```
      '''</example>'''
      */
-    instance.set = createSetter(instance, function (name, value) {
+    instance.set = createSetter(instance, function(name, value) {
       fields[name] = value;
     }, true);
-    instance.get = createGetter(instance, function (name) {
+    instance.get = createGetter(instance, function(name) {
       return fields[name];
     }, true);
 
@@ -138,11 +141,16 @@
      '''<example>'''
      * @example send():field is null
       ```js
-      var tracker = app.createTracker('h5t', 'send_case_1');
+      var localStorage = app.storageConfig.localStorageProxy;
+      var tracker = app.createTracker('h5t', 'send_case_1', app.sessionManager, app.storageSender, app.storageConfig);
       tracker.set({
         x: 1,
         y: 2,
-        rid: null
+        rid: null,
+        uid: null,
+        sid: null,
+        seq: null,
+        time: null
       });
       tracker.send({z: 3});
       tracker.send({
@@ -166,7 +174,8 @@
       ```
      * @example send():accept is null
       ```js
-      var tracker = app.createTracker('h5', 'send_case_2');
+      var localStorage = app.storageConfig.localStorageProxy;
+      var tracker = app.createTracker('h5', 'send_case_2', app.sessionManager, app.storageSender, app.storageConfig);
       tracker.send({z: 3});
       tracker.create({});
 
@@ -175,7 +184,8 @@
       ```
      * @example send():event {}
       ```js
-      var tracker = app.createTracker('h5t', 'send_case_3');
+      var localStorage = app.storageConfig.localStorageProxy;
+      var tracker = app.createTracker('h5t', 'send_case_3', app.sessionManager, app.storageSender, app.storageConfig);
       tracker.send({message: 'case_3'});
       tracker.create({
         accept: '/host/case3',
@@ -184,7 +194,8 @@
       ```
      * @example send():string
       ```js
-      var tracker = app.createTracker('h5t', 'send_case_4');
+      var localStorage = app.storageConfig.localStorageProxy;
+      var tracker = app.createTracker('h5t', 'send_case_4', app.sessionManager, app.storageSender, app.storageConfig);
       tracker.send('pageview');
       tracker.create({
         accept: '/host/case4'
@@ -211,21 +222,19 @@
       }
       /*</safe>*/
       // merge data
-      var item = sessionManager ? {
+      var item = {
         rid: newGuid(), // record id
         uid: sessionManager.get('uid'),
         sid: sessionManager.get('sid'),
         seq: sessionManager.get('seq'),
         time: (Date.now() - sessionManager.get('birthday')).toString(36)
-      } : {
-        rid: newGuid()
       };
       if (options.data) {
-        Object.keys(options.data).forEach(function (key) {
+        Object.keys(options.data).forEach(function(key) {
           item[key] = options.data[key];
         });
       }
-      Object.keys(fields).forEach(function (key) {
+      Object.keys(fields).forEach(function(key) {
         item[key] = fields[key];
       });
       if (typeof data === 'string') {
@@ -233,7 +242,7 @@
           ht: data // hit type // "event" | "pageview" | "appview"
         };
       }
-      Object.keys(data).forEach(function (key) {
+      Object.keys(data).forEach(function(key) {
         item[key] = data[key];
       });
       emitEvent('send', item);
@@ -248,7 +257,8 @@
      '''<example>'''
      * @example log():case 1
       ```js
-      var tracker = app.createTracker('h5t', 'log_case_1');
+      var localStorage = app.storageConfig.localStorageProxy;
+      var tracker = app.createTracker('h5t', 'log_case_1', app.sessionManager, app.storageSender, app.storageConfig);
       tracker.set({
         x: 1,
         y: 2
@@ -278,13 +288,13 @@
       ```
      * @example log():level is undefined
       ```js
-      var tracker = app.createTracker('h5t', 'log_case_2');
+      var tracker = app.createTracker('h5t', 'log_case_2', app.sessionManager, app.storageSender, app.storageConfig);
       tracker.log({});
       tracker.create({});
       ```
      * @example log():event {}
       ```js
-      var tracker = app.createTracker('h5t', 'log_case_3');
+      var tracker = app.createTracker('h5t', 'log_case_3', app.sessionManager, app.storageSender, app.storageConfig);
       tracker.log('case3');
       tracker.create({
         event: {}
@@ -313,7 +323,7 @@
         return;
       }
       var item = {};
-      Object.keys(data).forEach(function (key) {
+      Object.keys(data).forEach(function(key) {
         item[key] = data[key];
       });
       emitEvent('log', item);
@@ -324,8 +334,8 @@
     }
     instance.log = log;
 
-    ['debug', 'info', 'warn', 'error', 'fatal'].forEach(function (level) {
-      instance[level] = function (message) {
+    ['debug', 'info', 'warn', 'error', 'fatal'].forEach(function(level) {
+      instance[level] = function(message) {
         log({
           level: level,
           message: message
@@ -340,12 +350,12 @@
      '''<example>'''
      * @example create():opts in undefined
       ```js
-      var tracker = app.createTracker('create_case_1');
+      var tracker = app.createTracker('h5t', 'create_case_1', app.sessionManager, app.storageSender, app.storageConfig);
       tracker.create();
       ```
      * @example create():duplicate create
       ```js
-      var tracker = app.createTracker('create_case_2');
+      var tracker = app.createTracker('h5t', 'create_case_2', app.sessionManager, app.storageSender, app.storageConfig);
       tracker.create({});
       tracker.create({});
       ```
@@ -365,7 +375,7 @@
       options = opts;
       var temp = actionList;
       actionList = null;
-      temp.forEach(function (item) {
+      temp.forEach(function(item) {
         instance[item.name](item.data);
       });
     }

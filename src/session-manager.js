@@ -20,12 +20,13 @@
   /**
    * 创建 Session 管理器
    *
-   * @param {Number} sessionExpires 过期时间 30 秒
+   * @param {Object} storageConfig 存储配置
    * @return {Object} 返回管理器会话实例
    '''<example>'''
    * @example createSessionManager():base
     ```js
-    var sessionManager = app.createSessionManager();
+    var sessionStorage = app.storageConfig.sessionStorageProxy;
+    var sessionManager = app.createSessionManager(app.storageConfig);
     var sessionId = sessionStorage['h5t@global/sessionId'];
     var sessionSeq = sessionStorage['h5t@global/sessionSeq'];
     var birthday = sessionStorage['h5t@global/sessionBirthday'];
@@ -52,9 +53,12 @@
     * @example createSessionManager():sessionExpires => 1
     ```js
     var timeout = 1;
-    var sessionManager = app.createSessionManager(timeout);
+    var oldSesssionExpires = app.storageConfig.sessionExpires;
+    app.storageConfig.sessionExpires = timeout;
+    var sessionManager = app.createSessionManager(app.storageConfig);
 
     setTimeout(function(){
+      app.storageConfig.sessionExpires = oldSesssionExpires;
       console.log(Date.now() - sessionManager.get('liveTime') > timeout * 1000);
       // > true
       // * done
@@ -62,10 +66,9 @@
     ```
    '''</example>'''
    */
-  function createSessionManager(sessionExpires) {
-    var storageInstance = sessionStorage;
-    sessionExpires = sessionExpires || 30;
+  function createSessionManager(storageConfig) {
     var instance = createEmitter();
+    var storageInstance = storageConfig.sessionStorageProxy;
 
     var fieldsKey = {
       sid: storageKeys.sessionId,
@@ -74,9 +77,9 @@
       liveTime: storageKeys.sessionLiveTime,
     };
 
-    var userId = localStorage[storageKeys.userId];
+    var userId = storageConfig.localStorageProxy[storageKeys.userId];
     if (!userId) {
-      userId = localStorage[storageKeys.userId] = newGuid();
+      userId = storageConfig.localStorageProxy[storageKeys.userId] = newGuid();
     }
 
     /**
@@ -87,13 +90,15 @@
      '''<example>'''
      * @example get():base
       ```js
-      var sessionManager = app.createSessionManager();
+      var sessionStorage = app.storageConfig.sessionStorageProxy;
+      var sessionManager = app.createSessionManager(app.storageConfig);
       console.log(sessionStorage['h5t@global/sessionId'] === sessionManager.get('sid'));
       // > true
       ```
      * @example get():safe
       ```js
-      var sessionManager = app.createSessionManager();
+      var sessionStorage = app.storageConfig.sessionStorageProxy;
+      var sessionManager = app.createSessionManager(app.storageConfig);
       delete sessionStorage['h5t@global/sessionId'];
       sessionManager.get('sid');
       console.log(typeof sessionStorage['h5t@global/sessionId']);
@@ -117,7 +122,7 @@
      '''<example>'''
      * @example createSession():base
       ```js
-      var sessionManager = app.createSessionManager();
+      var sessionManager = app.createSessionManager(app.storageConfig);
       var sessionId = sessionManager.get('sid');
 
       console.log(!!sessionId);
@@ -154,7 +159,8 @@
      '''<example>'''
      * @example destroySession():base
       ```js
-      var sessionManager = app.createSessionManager();
+      var sessionStorage = app.storageConfig.sessionStorageProxy;
+      var sessionManager = app.createSessionManager(app.storageConfig);
 
       console.log(!!sessionManager.get('sid'));
       // > true
@@ -190,7 +196,7 @@
     function inputHandler(e) {
       var now = Date.now();
 
-      if (now - storageInstance[storageKeys.sessionLiveTime] >= sessionExpires * 1000) {
+      if (now - storageInstance[storageKeys.sessionLiveTime] >= storageConfig.sessionExpires * 1000) {
         createSession();
       } else {
         // setTimeout 避免多个 app 实例互相影响

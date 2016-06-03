@@ -18,7 +18,7 @@ describe("src/tracker.js", function () {
 
   it("createTracker():base", function() {
     examplejs_printLines = [];
-    var tracker = app.createTracker('base');
+    var tracker = app.createTracker('h5t', 'base', app.sessionManager, app.storageSender, app.storageConfig);
     var count = 0;
     tracker.error('error1');
     tracker.send({
@@ -66,7 +66,7 @@ describe("src/tracker.js", function () {
   });
   it("set() & get():base", function() {
     examplejs_printLines = [];
-      var tracker = app.createTracker('setter');
+      var tracker = app.createTracker('h5t', 'setter', app.sessionManager, app.storageSender, app.storageConfig);
       tracker.set({
         x: 1,
         y: 2
@@ -78,11 +78,16 @@ describe("src/tracker.js", function () {
   });
   it("send():field is null", function() {
     examplejs_printLines = [];
-      var tracker = app.createTracker('h5t', 'send_case_1');
+      var localStorage = app.storageConfig.localStorageProxy;
+      var tracker = app.createTracker('h5t', 'send_case_1', app.sessionManager, app.storageSender, app.storageConfig);
       tracker.set({
         x: 1,
         y: 2,
-        rid: null
+        rid: null,
+        uid: null,
+        sid: null,
+        seq: null,
+        time: null
       });
       tracker.send({z: 3});
       tracker.send({
@@ -106,7 +111,8 @@ describe("src/tracker.js", function () {
   });
   it("send():accept is null", function() {
     examplejs_printLines = [];
-      var tracker = app.createTracker('h5', 'send_case_2');
+      var localStorage = app.storageConfig.localStorageProxy;
+      var tracker = app.createTracker('h5', 'send_case_2', app.sessionManager, app.storageSender, app.storageConfig);
       tracker.send({z: 3});
       tracker.create({});
 
@@ -115,7 +121,8 @@ describe("src/tracker.js", function () {
   });
   it("send():event {}", function() {
     examplejs_printLines = [];
-      var tracker = app.createTracker('h5t', 'send_case_3');
+      var localStorage = app.storageConfig.localStorageProxy;
+      var tracker = app.createTracker('h5t', 'send_case_3', app.sessionManager, app.storageSender, app.storageConfig);
       tracker.send({message: 'case_3'});
       tracker.create({
         accept: '/host/case3',
@@ -124,7 +131,8 @@ describe("src/tracker.js", function () {
   });
   it("send():string", function() {
     examplejs_printLines = [];
-      var tracker = app.createTracker('h5t', 'send_case_4');
+      var localStorage = app.storageConfig.localStorageProxy;
+      var tracker = app.createTracker('h5t', 'send_case_4', app.sessionManager, app.storageSender, app.storageConfig);
       tracker.send('pageview');
       tracker.create({
         accept: '/host/case4'
@@ -136,7 +144,8 @@ describe("src/tracker.js", function () {
   });
   it("log():case 1", function() {
     examplejs_printLines = [];
-      var tracker = app.createTracker('h5t', 'log_case_1');
+      var localStorage = app.storageConfig.localStorageProxy;
+      var tracker = app.createTracker('h5t', 'log_case_1', app.sessionManager, app.storageSender, app.storageConfig);
       tracker.set({
         x: 1,
         y: 2
@@ -161,13 +170,13 @@ describe("src/tracker.js", function () {
   });
   it("log():level is undefined", function() {
     examplejs_printLines = [];
-      var tracker = app.createTracker('h5t', 'log_case_2');
+      var tracker = app.createTracker('h5t', 'log_case_2', app.sessionManager, app.storageSender, app.storageConfig);
       tracker.log({});
       tracker.create({});
   });
   it("log():event {}", function() {
     examplejs_printLines = [];
-      var tracker = app.createTracker('h5t', 'log_case_3');
+      var tracker = app.createTracker('h5t', 'log_case_3', app.sessionManager, app.storageSender, app.storageConfig);
       tracker.log('case3');
       tracker.create({
         event: {}
@@ -175,12 +184,12 @@ describe("src/tracker.js", function () {
   });
   it("create():opts in undefined", function() {
     examplejs_printLines = [];
-      var tracker = app.createTracker('create_case_1');
+      var tracker = app.createTracker('h5t', 'create_case_1', app.sessionManager, app.storageSender, app.storageConfig);
       tracker.create();
   });
   it("create():duplicate create", function() {
     examplejs_printLines = [];
-      var tracker = app.createTracker('create_case_2');
+      var tracker = app.createTracker('h5t', 'create_case_2', app.sessionManager, app.storageSender, app.storageConfig);
       tracker.create({});
       tracker.create({});
   });

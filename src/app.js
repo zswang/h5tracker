@@ -53,18 +53,21 @@
    '''<example>'''
    * @example createApp():base
     ```js
-    var appInstance = app.createApp('cctv1');
+    var appInstance = app.createApp('cctv1', app.storageConfig);
     console.log(appInstance.name);
     // > cctv1
 
-    var appInstance = app.createApp();
+    var appInstance = app.createApp('', app.storageConfig);
     console.log(appInstance.name);
     // > h5t
     ```
    * @example createApp():sessionExpires => 1
     ```js
-    var appInstance = app.createApp('cctv2', 1);
-    appInstance.on('createSession', function () {
+    var oldSessionExpires = app.storageConfig.sessionExpires;
+    app.storageConfig.sessionExpires = 1;
+    var appInstance = app.createApp('cctv2', app.storageConfig);
+    appInstance.once('createSession', function () {
+      app.storageConfig.sessionExpires = oldSessionExpires;
       console.log(appInstance.name);
       // > cctv2
       // * done
@@ -75,13 +78,14 @@
     ```
    '''</example>'''
    */
-  function createApp(appName, sessionExpires) {
+  function createApp(appName, storageConfig) {
     appName = appName || 'h5t';
     /*<remove trigger="release">*/
     console.log('createApp() appName: %s', appName);
     /*</remove>*/
 
-    var sessionManager = createSessionManager(sessionExpires);
+    var storageSender = createStorageSender(storageConfig);
+    var sessionManager = createSessionManager(storageConfig);
     sessionManager.on('createSession', function() {
       Object.keys(trackers).forEach(function(key) {
         trackers[key].emitEvent('createSession');
@@ -93,10 +97,13 @@
         trackers[key].emitEvent('destroySession');
       });
     });
-
-    var instance = createTracker(appName, appName, sessionManager);
+    var instance = createTracker(appName, appName, sessionManager, storageSender, storageConfig);
 
     /*<remove trigger="release">*/
+    instance.storageConfig = storageConfig;
+    instance.storageSender = storageSender;
+    instance.sessionManager = sessionManager;
+
     instance.createEmitter = createEmitter;
     instance.createStorage = createStorage;
     instance.createStorageList = createStorageList;
@@ -117,12 +124,14 @@
      * 初始化应用
      */
     function init() {
+      instance.emit('init');
       sessionManager.init();
       var items = commandArgvList;
       commandArgvList = null;
       items.forEach(function (argv) {
         cmd.apply(instance, argv);
       });
+      storageSender.scan();
     }
     instance.init = init;
 
@@ -165,6 +174,7 @@
       app.cmd('create', {
         accept: '/host/path/to'
       });
+      var localStorage = app.storageConfig.localStorageProxy;
       var list = JSON.parse(localStorage['h5t@storageList/h5t/h5t/send']);
       console.log(/event=click/.test(list[0].data.query));
       // > true
@@ -194,7 +204,7 @@
       if (trackerName) {
         tracker = trackers[trackerName];
         if (!tracker) {
-          tracker = trackers[trackerName] = createTracker(appName, trackerName, sessionManager);
+          tracker = trackers[trackerName] = createTracker(appName, trackerName, sessionManager, storageSender, storageConfig);
         }
       } else {
         tracker = instance;

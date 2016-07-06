@@ -68,7 +68,14 @@ window.sessionStorage = null;
   }
   var storageConfig = {
     // 兼容低端浏览器（比如：小米1 华为荣耀6）
-    localStorageProxy: window.localStorage || {},
+    localStorageProxy: window.localStorage || {
+      setItem: function(name, value) {
+        this[name] = String(value);
+      },
+      removeItem: function(name) {
+        delete this[name];
+      }
+    },
     sessionStorageProxy: window.sessionStorage || {},
 
     sessionExpires: 30,
@@ -81,7 +88,13 @@ window.sessionStorage = null;
   /*</jdists>*/
 
   var app = createApp(objectName, storageConfig);
+
   /*<remove>*/
+  if (!window.localStorage) { // coverage
+    storageConfig.localStorageProxy.setItem('h5t', 'true');
+    storageConfig.localStorageProxy.removeItem('h5t', 'true');
+  }
+
   app.entery = arguments.callee;
   app.oldEntery = oldObject;
   app.storageConfig = storageConfig;

@@ -7,8 +7,8 @@
    * @author
    *   zswang (http://weibo.com/zswang)
    *   meglad (https://github.com/meglad)
-   * @version 0.1.1
-   * @date 2016-06-03
+   * @version 0.1.2
+   * @date 2016-07-18
    */
   /**
    '''<example>'''
@@ -45,7 +45,14 @@
   }
   var storageConfig = {
     // 兼容低端浏览器（比如：小米1 华为荣耀6）
-    localStorageProxy: window.localStorage || {},
+    localStorageProxy: window.localStorage || {
+      setItem: function(name, value) {
+        this[name] = String(value);
+      },
+      removeItem: function(name) {
+        delete this[name];
+      }
+    },
     sessionStorageProxy: window.sessionStorage || {},
     sessionExpires: 30,
     storageExpires: 10 * 24 * 60 * 60,

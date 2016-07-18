@@ -7,7 +7,7 @@
    * @author
    *   zswang (http://weibo.com/zswang)
    *   meglad (https://github.com/meglad)
-   * @version 0.1.2
+   * @version 0.1.3
    * @date 2016-07-18
    */
   /**

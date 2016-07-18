@@ -8,6 +8,7 @@ h5tracker 移动端页面统计框架
 1. Offline Storage.（离线存储）
 2. File size is small.（文件小）
 3. Manage multiple statistical modules.（统计模块并行）
+4. Session life cycle. （会话生命周期）
 
 ## Usage（使用方法）
 
@@ -74,51 +75,19 @@ trn  | tracker name  | 追踪器名 | 默认 null
 
 ### Session ID（会话标识）
 
-+ sessionStorage.h5t_sessionId
++ sessionStorage['h5t@global/sessionId']
 
 ### Session Seq（会话序号）
 
-+ sessionStorage.h5t_sessionSeq
++ sessionStorage['h5t@global/sessionSeq']
 
 ### User ID（用户标识）
 
-+ localStorage.h5t_userId
++ localStorage['h5t@global/userId']
 
-### List of data to be sent（待发送列表）
+### Last scan the storage time（最后扫描的时间）
 
-+ localStorage.h5t_data_:tracker
-
-```js
-[{
-  createTime: 1455603047968, // 记录产生时间
-  expireTime: 1455603147968, // 记录过期时间
-  accept: 'http://log.ifreetalk.com/u.gif?', // 日志接收地址
-  data: 'ht=event&action=tap&page=home&xp=A(main)BC2A' // 数据
-}]
-```
-
-### Page access path（页面访问路径）
-
-+ localStorage.h5t_follow
-
-```js
-{
-  createTime: 1455603047968, // 创建时间
-  updateTime: 1455603047968, // 最后更新时间
-  sessionId: 'asdfasdf', // Session ID
-  sessionSeq: 1, // 第几个生成
-  path: [
-    {
-      time: 1455603047968,
-      location: "/home/room/12312"
-    }, {
-      time: 1455603041128,
-      location: "/?room=1123"
-    }
-  ],
-  status: "resume" // "resume": 活动， "pause": 挂起
-}
-```
++ localStorage['h5t@global/scanTime']
 
 ## License
 

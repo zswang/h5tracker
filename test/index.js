@@ -37,9 +37,17 @@ describe("src/index.js", function () {
     delete window['h5t'];
     app.entery(document, window);
   });
-  it("oldObject.q null", function() {
+  it("oldObject.queue null", function() {
     examplejs_printLines = [];
     window['h5t'] = {};
     app.entery(document, window);
+  });
+  it("window.h5t = [...]", function() {
+    examplejs_printLines = [];
+    window.h5t = ['log', 'desc'];
+  });
+  it("window.h5t = {...}", function() {
+    examplejs_printLines = [];
+    window.h5t = { 'log': 'desc', 'send': { page: 'home' } };
   });
 });

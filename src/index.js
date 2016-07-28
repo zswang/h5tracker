@@ -1,12 +1,12 @@
 /*<remove>*/
-var name = 'h5t';
-window[name] = function(cmd, src) {
-  (window[name].q = window[name].q || []).push(arguments);
-};
-window[name]('log', 'test');
-window[name]('set', 'debug', true);
-window.localStorage = null;
-window.sessionStorage = null;
+require("./inline");
+(function () {
+  var name = 'h5t';
+  window[name]('log', 'test');
+  window[name]('set', 'debug', true);
+  window.localStorage = null;
+  window.sessionStorage = null;
+})();
 /*</remove>*/
 
 (function(document, window) {
@@ -53,10 +53,18 @@ window.sessionStorage = null;
     delete window['h5t'];
     app.entery(document, window);
     ```
-   * @example oldObject.q null
+   * @example oldObject.queue null
     ```js
     window['h5t'] = {};
     app.entery(document, window);
+    ```
+   * @example window.h5t = [...]
+    ```js
+    window.h5t = ['log', 'desc'];
+    ```
+   * @example window.h5t = {...}
+    ```js
+    window.h5t = { 'log': 'desc', 'send': { page: 'home' } };
     ```
    '''</example>'''
    */
@@ -105,11 +113,13 @@ window.sessionStorage = null;
   };
   instance.app = app;
   instance.defined = true;
+  instance.h5t = true;
   if (oldObject) {
     // 处理临时 h5t 对象
-    var items = [].concat(oldObject.p || [], oldObject.q || []);
-    oldObject.p = oldObject.q = null; // 清理内存
-    instance.p = instance.q = { // 接管之前的定义
+    var items = oldObject.queue;
+    instance.beginning = oldObject.beginning;
+    oldObject.queue = null;
+    instance.queue = { // 接管之前的定义
       push: function(args) {
         instance.apply(instance, args);
       }

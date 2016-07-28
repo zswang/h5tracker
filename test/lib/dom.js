@@ -88,6 +88,14 @@ class HTMLHtmlElement extends HTMLElement {
   }
 }
 
+class HTMLScriptElement extends HTMLElement {
+  constructor() {
+    super('script');
+  }
+  set src(value) {
+  }
+}
+
 class HTMLImage extends HTMLElement {
   constructor() {
     super('img');
@@ -113,6 +121,7 @@ class HTMLDocument extends Node {
   constructor() {
     super('#document');
     this._documentElement = new HTMLHtmlElement();
+    this._script = new HTMLScriptElement();
     this.appendChild(this._documentElement);
   }
 
@@ -140,6 +149,10 @@ class HTMLDocument extends Node {
 
   querySelector() {
     return null;
+  }
+
+  querySelectorAll() {
+    return [this._script];
   }
 
   getElementById(id) {

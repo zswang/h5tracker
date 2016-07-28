@@ -7,8 +7,8 @@
    * @author
    *   zswang (http://weibo.com/zswang)
    *   meglad (https://github.com/meglad)
-   * @version 0.1.3
-   * @date 2016-07-18
+   * @version 0.2.1
+   * @date 2016-07-28
    */
   /**
    '''<example>'''
@@ -31,10 +31,18 @@
     delete window['h5t'];
     app.entery(document, window);
     ```
-   * @example oldObject.q null
+   * @example oldObject.queue null
     ```js
     window['h5t'] = {};
     app.entery(document, window);
+    ```
+   * @example window.h5t = [...]
+    ```js
+    window.h5t = ['log', 'desc'];
+    ```
+   * @example window.h5t = {...}
+    ```js
+    window.h5t = { 'log': 'desc', 'send': { page: 'home' } };
     ```
    '''</example>'''
    */
@@ -1656,6 +1664,11 @@
       }
     }
     instance.init = init;
+    /**
+     * 用户活跃事件处理
+     *
+     * @param {Object} e
+     */
     function inputHandler(e) {
       var now = Date.now();
       if (now - storageInstance[storageKeys.sessionLiveTime] >= storageConfig.sessionExpires * 1000) {
@@ -1828,11 +1841,13 @@
   };
   instance.app = app;
   instance.defined = true;
+  instance.h5t = true;
   if (oldObject) {
     // 处理临时 h5t 对象
-    var items = [].concat(oldObject.p || [], oldObject.q || []);
-    oldObject.p = oldObject.q = null; // 清理内存
-    instance.p = instance.q = { // 接管之前的定义
+    var items = oldObject.queue;
+    instance.beginning = oldObject.beginning;
+    oldObject.queue = null;
+    instance.queue = { // 接管之前的定义
       push: function(args) {
         instance.apply(instance, args);
       }

@@ -193,6 +193,11 @@
     }
     instance.init = init;
 
+    /**
+     * 用户活跃事件处理
+     *
+     * @param {Object} e
+     */
     function inputHandler(e) {
       var now = Date.now();
 

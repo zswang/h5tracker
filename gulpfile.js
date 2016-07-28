@@ -83,7 +83,7 @@ function debugAddress() {
   var result;
   Object.keys(net).some(function(key) {
     return net[key].some(function(item) {
-      if (!item.internal && item.family === 'IPv4') {
+      if (!item.internal && item.family === 'IPv4' && /192.168/.test(item.address)) {
         result = item.address;
         return true;
       }

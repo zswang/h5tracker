@@ -1,6 +1,6 @@
 {
-  "name": "h5tacker",
-  "main": "h5tacker.js",
+  "name": "h5tracker",
+  "main": "h5tracker.js",
   "description": "Logs Tracker of Mobile",
   "author": [
     {
@@ -25,7 +25,7 @@
     "example",
     "tools"
   ],
-  "version": "0.2.1",
+  "version": "0.2.2",
   "keywords": [
     "tracker",
     "log",

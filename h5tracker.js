@@ -7,8 +7,8 @@
    * @author
    *   zswang (http://weibo.com/zswang)
    *   meglad (https://github.com/meglad)
-   * @version 0.2.1
-   * @date 2016-07-28
+   * @version 0.2.2
+   * @date 2016-11-11
    */
   /**
    '''<example>'''

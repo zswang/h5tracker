@@ -176,7 +176,9 @@
         });
 
         if (!item.data.accept) {
+          /*<safe>*/
           console.error('accept is undefined.');
+          /*</safe>*/
           return;
         }
 

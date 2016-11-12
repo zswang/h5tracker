@@ -218,8 +218,10 @@
           }
         }
         return tracker[methodName].apply(tracker, [].slice.call(arguments, 1));
+        /*<safe>*/
       } else {
         console.error('Tracker method "%s" is invalid.', methodName);
+        /*</safe>*/
       }
     }
     instance.cmd = cmd;

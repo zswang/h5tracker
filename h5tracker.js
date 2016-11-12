@@ -7,8 +7,8 @@
    * @author
    *   zswang (http://weibo.com/zswang)
    *   meglad (https://github.com/meglad)
-   * @version 0.2.2
-   * @date 2016-11-11
+   * @version 0.2.3
+   * @date 2016-11-12
    */
   /**
    '''<example>'''
@@ -1475,7 +1475,6 @@
           tried: (item.tried || 0) + 1
         });
         if (!item.data.accept) {
-          console.error('accept is undefined.');
           return;
         }
         var img = document.createElement('img');
@@ -1827,8 +1826,6 @@
           }
         }
         return tracker[methodName].apply(tracker, [].slice.call(arguments, 1));
-      } else {
-        console.error('Tracker method "%s" is invalid.', methodName);
       }
     }
     instance.cmd = cmd;
